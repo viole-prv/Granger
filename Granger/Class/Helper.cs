@@ -5,19 +5,26 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using Viole_Logger_Interface;
 
 namespace Granger
 {
     public partial class Helper
     {
         public const int SW_RESTORE = 9;
+
+        public const int WM_KEYDOWN = 0x0100;
+        public const int WM_KEYUP = 0x0101;
+
+        public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+
+        public const int KEYEVENTF_EXTENDEDKEY = 0x0001;
+        public const int KEYEVENTF_KEYUP = 0x0002;
 
 #pragma warning disable CA1401 // OnPrevious/Invokes should not be visible
 
@@ -50,9 +57,25 @@ namespace Granger
         [DllImport("user32.dll", SetLastError = true)]
         public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        public static extern int LoadKeyboardLayout(string pwszKLID, uint Flags);
+
+        [DllImport("user32.dll", EntryPoint = "SetCursorPos", SetLastError = true)]
+        public static extern bool SetCursorPosition(int X, int Y);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        public static void SwitchInputMethod(IntPtr hWnd)
+        {
+            PostMessage(hWnd, 0x50, (IntPtr)1, (IntPtr)LoadKeyboardLayout("00000409", 1));
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll", EntryPoint = "mouse_event", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
+        public static extern void MouseEvent(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
 
 #pragma warning restore CA1401 // OnPrevious/Invokes should not be visible
 
@@ -344,5 +367,51 @@ namespace Granger
 
             return $"{Uri.Host}{(Uri.IsDefaultPort ? "" : $":{Uri.Port}")}";
         }
+
+        public static byte? ToHexChar(char Char)
+        {
+            return char.ToLower(Char) switch
+            {
+                '0' => 0x30,
+                '1' => 0x31,
+                '2' => 0x32,
+                '3' => 0x33,
+                '4' => 0x34,
+                '5' => 0x35,
+                '6' => 0x36,
+                '7' => 0x37,
+                '8' => 0x38,
+                '9' => 0x39,
+                'a' => 0x41,
+                'b' => 0x42,
+                'c' => 0x43,
+                'd' => 0x44,
+                'e' => 0x45,
+                'f' => 0x46,
+                'g' => 0x47,
+                'h' => 0x48,
+                'i' => 0x49,
+                'j' => 0x4a,
+                'k' => 0x4b,
+                'l' => 0x4c,
+                'm' => 0x4d,
+                'n' => 0x4e,
+                'o' => 0x4f,
+                'p' => 0x50,
+                'q' => 0x51,
+                'r' => 0x52,
+                's' => 0x53,
+                't' => 0x54,
+                'u' => 0x55,
+                'v' => 0x56,
+                'w' => 0x57,
+                'x' => 0x58,
+                'y' => 0x59,
+                'z' => 0x5A,
+                '-' => 0xBD,
+                _ => null,
+            };
+        }
+
     }
 }

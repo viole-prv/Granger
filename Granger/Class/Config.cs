@@ -478,10 +478,6 @@ namespace Granger
         {
             [Description("Отсутствует")]
             None,
-            [Description("Новый")]
-            New,
-            [Description("Настроеный")]
-            Configured,
             [Description("Запущенный")]
             Launch,
             [Description("Дроп")]
@@ -751,11 +747,6 @@ namespace Granger
                             Viole_Pipe.Pipe.Set(Login, JsonConvert.SerializeObject(new { Type = "BIN", Data = Bin }));
 
                             break;
-
-                        case EUpdate.Server:
-                            Viole_Pipe.Pipe.Set(Login, JsonConvert.SerializeObject(new { Type = "SERVER", Data = Server }));
-
-                            break;
                     }
                 }
             }
@@ -765,33 +756,53 @@ namespace Granger
                 return $"<a href=\"https://steamcommunity.com/profiles/{Setup.SteamID}\">{Login.ToUpper()}</a>";
             }
 
-            private async Task Connect()
-            {
-                foreach (var X in Auto.Server.List
-                    .Where(x => x.Selected)
-                    .OrderBy(x => x.Max - x.Min)
-                    .Reverse()
-                    .ToList())
-                {
-                    await X.Update();
-
-                    if ((X.Min + 2) < X.Max)
-                    {
-                        Server.IP = X.IP;
-                        Server.Password = X.Password;
-
-                        Update(EUpdate.Server);
-
-                        break;
-                    }
-                }
-            }
-
             public void Dispose()
             {
                 Dispose(true);
 
                 GC.SuppressFinalize(this);
+            }
+
+            public void SetForeground()
+            {
+                if (Bin.Window!.Handle == Helper.GetForegroundWindow()) return;
+
+                if (Helper.IsIconic(Bin.Window!.Handle))
+                {
+                    if (!Helper.ShowWindowAsync(Bin.Window!.Handle, Helper.SW_RESTORE))
+                    {
+                        Logger.LogGenericWarning("Не удалось показать окно.");
+                    }
+                }
+
+                if (!Helper.SetForegroundWindow(Bin.Window!.Handle))
+                {
+                    Logger.LogGenericWarning("Не удалось выдвинуть окно на передний план и активировать его.");
+                }
+            }
+
+            public bool GetWindow()
+            {
+                if (Bin.Window is not null)
+                {
+                    foreach (var X in Process.GetProcesses()
+                        .Where(x => x.ProcessName == "csgo")
+                        .Where(x => x.MainWindowTitle == Login.ToUpper())
+                        .ToList())
+                    {
+                        if (Helper.GetWindowRect(X.MainWindowHandle, out Helper.RECT RECT))
+                        {
+                            Bin.Window.Handle = X.MainWindowHandle;
+                            Bin.Window.Setup(RECT);
+
+                            Update();
+
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
             }
 
             protected virtual void Dispose(bool disposing)
@@ -2055,6 +2066,21 @@ namespace Granger
                     }
                 }
 
+                private string? _LobbyCode;
+
+                [JsonProperty("Lobby Code")]
+                public string? LobbyCode
+                {
+                    get => _LobbyCode;
+                    set
+                    {
+                        _LobbyCode = value;
+
+                        NotifyPropertyChanged(nameof(LobbyCode));
+                    }
+                }
+
+                public bool ShouldSerializeLobbyCode() => !string.IsNullOrEmpty(LobbyCode);
 
                 private string? _PersonaName;
 
@@ -2128,123 +2154,33 @@ namespace Granger
                             _Drop = value;
 
                             NotifyPropertyChanged(nameof(Drop));
-
-                            Update();
+                            NotifyPropertyChanged(nameof(Left));
                         }
                     }
 
                     public bool ShouldSerializeDrop() => Drop.HasValue;
 
-                    private Tuple<DateTime, TimeSpan>? _Left;
-
                     [JsonIgnore]
-                    public Tuple<DateTime, TimeSpan>? Left
-                    {
-                        get => _Left;
-                        set
-                        {
-                            _Left = value;
-
-                            NotifyPropertyChanged(nameof(Left));
-
-                            Update();
-                        }
-                    }
-
-                    [JsonIgnore]
-                    public Tuple<TimeSpan, DateTime>? Another
+                    public TimeSpan? Left
                     {
                         get
                         {
                             if (Drop.HasValue)
                             {
-                                var Value = Drop.Value.AddDays(7) - DateTime.Now;
+                                int _ = (DayOfWeek.Wednesday - DateTime.Today.DayOfWeek + 6) % 7;
 
-                                return Tuple.Create(
-                                    Value,
-                                    DateTime.Now + Value
-                                );
+                                var Value = DateTime.Today.AddDays(_ + 1);
+
+                                if (DateTime.Now > Value)
+                                {
+                                    return null;
+                                }
+
+                                return Value - DateTime.Now;
                             }
 
                             return null;
                         }
-                    }
-
-                    public enum EValue : byte
-                    {
-                        Another,
-                        Left,
-                        Fresh
-                    }
-
-                    [JsonIgnore]
-                    public EValue Value
-                    {
-                        get
-                        {
-                            if (Left is not null)
-                            {
-                                return EValue.Left;
-                            }
-
-                            if (Drop.HasValue && (DateTime.Now - Drop.Value).TotalDays < 7d)
-                            {
-                                NotifyPropertyChanged(nameof(Another));
-
-                                return EValue.Another;
-                            }
-
-                            return EValue.Fresh;
-                        }
-                    }
-
-                    #region Enter
-
-                    private ICommand? _OnEnter;
-
-                    [JsonIgnore]
-                    public ICommand? OnEnter
-                    {
-                        get
-                        {
-                            return _OnEnter ??= new RelayCommand(_ =>
-                            {
-                                if (_ == null) return;
-
-                                string? T = _.ToString();
-
-                                if (string.IsNullOrEmpty(T)) return;
-
-                                var Account = Auto.Config!.AccountList.FirstOrDefault(x => x.Login == _.ToString());
-
-                                if (Account == null || Auto.Config.AccountList.Any(x => x.Exclude.Any(IExclude.EValue.Hover))) return;
-
-                                Update();
-
-                                if (Auto.Config!.Sort == ESort.Drop)
-                                {
-                                    if (Value == EValue.Another)
-                                    {
-                                        NotifyPropertyChanged(nameof(Another));
-
-                                        Sleep(Account, IExclude.EValue.Hover, 60 * 1000);
-                                    }
-                                    else if (Value == EValue.Left)
-                                    {
-                                        Auto.Config!.Update(IConfig.EUpdate.Left);
-
-                                        Sleep(Account, IExclude.EValue.Hover, 10 * 1000);
-                                    }
-                                }
-                            });
-                        }
-                    }
-
-                    #endregion
-
-                    public void Update()
-                    {
-                        NotifyPropertyChanged(nameof(Value));
                     }
 
                     public event PropertyChangedEventHandler? PropertyChanged;
@@ -2297,6 +2233,48 @@ namespace Granger
 
             #endregion
 
+            #region Exclude
+
+            public class IExclude
+            {
+                public enum EValue : byte
+                {
+                    Close
+                }
+
+                private readonly List<EValue> Value = new();
+
+                public void Add(EValue _)
+                {
+                    Value.Add(_);
+                }
+
+                public void Remove(EValue _)
+                {
+                    Value.Remove(_);
+                }
+
+                public bool Any(EValue _, bool Remove = false)
+                {
+                    if (Value.Contains(_))
+                    {
+                        if (Remove)
+                        {
+                            Value.Remove(_);
+                        }
+
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+
+            [JsonIgnore]
+            public IExclude Exclude { get; set; } = new();
+
+            #endregion
+
             #region Bin
 
             public class IBin : INotifyPropertyChanged
@@ -2332,22 +2310,6 @@ namespace Granger
                 }
 
                 public bool ShouldSerializeVergin() => Vergin;
-
-                private int? _Process;
-
-                [JsonProperty]
-                public int? Process
-                {
-                    get => _Process;
-                    set
-                    {
-                        _Process = value;
-
-                        NotifyPropertyChanged(nameof(Process));
-                    }
-                }
-
-                public bool ShouldSerializeProcess() => Process.HasValue;
 
                 private byte _Condition;
 
@@ -2391,6 +2353,74 @@ namespace Granger
                 }
 
                 public bool ShouldSerializePosition() => !Position.Equals(default(KeyValuePair<EPosition, DateTime>));
+
+                #region Window
+
+                public class IWindow
+                {
+                    [JsonProperty]
+                    public int ID { get; set; }
+
+                    public bool ShouldSerializeID() => ID > 0;
+
+                    [JsonProperty]
+                    public IntPtr Handle { get; set; }
+
+                    public bool ShouldSerializeHandle() => Handle != IntPtr.Zero;
+
+                    public IWindow(int ID, IntPtr Handle)
+                    {
+                        this.ID = ID;
+                        this.Handle = Handle;
+                    }
+
+                    public void Setup(Helper.RECT RECT)
+                    {
+                        X = RECT.Left;
+                        Y = RECT.Top;
+
+                        Width = RECT.Right - X - 5; // Отступ от окна.
+                        Height = RECT.Bottom - Y - 25; // Отступ от окна.
+                    }
+
+                    [JsonProperty]
+                    public int? X { get; set; }
+
+                    public bool ShouldSerializeX() => X.HasValue;
+
+                    [JsonProperty]
+                    public int? Y { get; set; }
+
+                    public bool ShouldSerializeY() => Y.HasValue;
+
+                    [JsonProperty]
+                    public int? Width { get; set; }
+
+                    public bool ShouldSerializeWidth() => Width.HasValue;
+
+                    [JsonProperty]
+                    public int? Height { get; set; }
+
+                    public bool ShouldSerializeHeight() => Height.HasValue;
+                }
+
+                private IWindow? _Window;
+
+                [JsonProperty]
+                public IWindow? Window
+                {
+                    get => _Window;
+                    set
+                    {
+                        _Window = value;
+
+                        NotifyPropertyChanged(nameof(Window));
+                    }
+                }
+
+                public bool ShouldSerializeWindow() => Window is not null && (Window.ShouldSerializeID() || Window.ShouldSerializeHandle() || Window.ShouldSerializeX() || Window.ShouldSerializeY() || Window.ShouldSerializeWidth() || Window.ShouldSerializeHeight());
+
+                #endregion
 
                 #region Location
 
@@ -2602,10 +2632,11 @@ namespace Granger
                     Show = false;
                     Vergin = false;
 
-                    Process = null;
                     Condition = 0;
 
                     Position = default;
+
+                    Window = null;
                     Location = null;
 
                     if (Inventory)
@@ -2635,94 +2666,6 @@ namespace Granger
                     NotifyPropertyChanged(nameof(Bin));
                 }
             }
-
-            #endregion
-
-            #region Exclude
-
-            public class IExclude
-            {
-                public enum EValue : byte
-                {
-                    Close,
-                    Hover
-                }
-
-                private readonly List<EValue> Value = new();
-
-                public void Add(EValue _)
-                {
-                    Value.Add(_);
-                }
-
-                public void Remove(EValue _)
-                {
-                    Value.Remove(_);
-                }
-
-                public bool Any(EValue _, bool Remove = false)
-                {
-                    if (Value.Contains(_))
-                    {
-                        if (Remove)
-                        {
-                            Value.Remove(_);
-                        }
-
-                        return true;
-                    }
-
-                    return false;
-                }
-            }
-
-            [JsonIgnore]
-            public IExclude Exclude { get; set; } = new();
-
-            #endregion
-
-            #region Server
-
-            public class IServer : INotifyPropertyChanged
-            {
-                private string? _IP;
-
-                [JsonProperty]
-                public string? IP
-                {
-                    get => _IP;
-                    set
-                    {
-                        _IP = value;
-
-                        NotifyPropertyChanged(nameof(IP));
-                    }
-                }
-
-                private string? _Password;
-
-                [JsonProperty]
-                public string? Password
-                {
-                    get => _Password;
-                    set
-                    {
-                        _Password = value;
-
-                        NotifyPropertyChanged(nameof(Password));
-                    }
-                }
-
-                public event PropertyChangedEventHandler? PropertyChanged;
-
-                private void NotifyPropertyChanged(string? propertyName = null)
-                {
-                    PropertyChanged?.Invoke(this, new(propertyName));
-                }
-            }
-
-            [JsonIgnore]
-            public IServer Server { get; set; } = new();
 
             #endregion
 
@@ -2788,9 +2731,6 @@ namespace Granger
 
                                     Account.Bin.Default();
 
-                                    Account.Setup.Date.Left = null;
-                                    Account.Setup.Date.Update();
-
                                     break;
                                 }
                                 else if (Line == "STEAM")
@@ -2832,7 +2772,8 @@ namespace Granger
                                             {
                                                 if (Process.HasExited) continue;
 
-                                                Account.Bin.Process = Process.Id;
+                                                Account.Bin.Window = new IBin.IWindow(Process.Id, Process.MainWindowHandle);
+                                                Account.GetWindow();
                                                 Account.Update();
 
                                                 if (Account.Bin.Vergin)
@@ -2841,26 +2782,12 @@ namespace Granger
 
                                                     try
                                                     {
-                                                        if (!Helper.SetWindowText(Process.MainWindowHandle, Account.Login.ToUpper()))
+                                                        if (!Helper.SetWindowText(Account.Bin.Window.Handle, Account.Login.ToUpper()))
                                                         {
                                                             Account.Logger.LogGenericWarning("Не удалось изменить название окна.");
                                                         }
 
-                                                        if (Process.MainWindowHandle != Helper.GetForegroundWindow())
-                                                        {
-                                                            if (Helper.IsIconic(Process.MainWindowHandle))
-                                                            {
-                                                                if (!Helper.ShowWindowAsync(Process.MainWindowHandle, Helper.SW_RESTORE))
-                                                                {
-                                                                    Account.Logger.LogGenericWarning("Не удалось показать окно.");
-                                                                }
-                                                            }
-
-                                                            if (!Helper.SetForegroundWindow(Process.MainWindowHandle))
-                                                            {
-                                                                Account.Logger.LogGenericWarning("Не удалось выдвинуть окно на передний план и активировать его.");
-                                                            }
-                                                        }
+                                                        Account.SetForeground();
                                                     }
                                                     finally
                                                     {
@@ -2879,11 +2806,8 @@ namespace Granger
                                                     Account.Bin.Condition = 3;
                                                     Account.Update();
 
-                                                    Account.Setup.Date.Left = null;
-                                                    Account.Setup.Date.Update();
+                                                    string Message = $"Процесс #{Account.Bin.Window.ID} был закрыт";
 
-                                                    string Message = $"Процесс #{Account.Bin.Process} был закрыт";
- 
                                                     Account.Logger.LogGenericWarning(Message);
 
                                                     _ = SendMessage($"{Account.Tag()} Что-то пошло не так, {Message.ToLower()}.", true);
@@ -2891,23 +2815,8 @@ namespace Granger
                                             }
                                         }
                                     }
-
-                                    if (Auto.Type == IAuto.EType.CSGO)
-                                    {
-                                        await Account.Connect();
-                                    }
                                 }
                                 else if (Line == "IN_GAME")
-                                {
-                                    if (Account.Bin.Position.Key == IBin.EPosition.NONE || Account.Bin.Position.Key == IBin.EPosition.MAIN_MENU)
-                                    {
-                                        Account.Bin.Position = new(IBin.EPosition.IN_GAME, DateTime.Now);
-                                        Account.Update();
-
-                                        Auto.Config!.Update(IConfig.EUpdate.Left); // Обновляем.
-                                    }
-                                }
-                                else if (Line == "MAIN_MENU")
                                 {
                                     if (Auto.Inventory.Enabled && !Auto.Inventory.Advance)
                                     {
@@ -2922,32 +2831,23 @@ namespace Granger
                                         }
                                     }
 
+                                    if (Account.Bin.Position.Key == IBin.EPosition.NONE || Account.Bin.Position.Key == IBin.EPosition.MAIN_MENU)
+                                    {
+                                        Account.Bin.Position = new(IBin.EPosition.IN_GAME, DateTime.Now);
+                                        Account.Update();
+                                    }
+                                }
+                                else if (Line == "MAIN_MENU")
+                                {
                                     if (Account.Bin.Position.Key == IBin.EPosition.NONE || Account.Bin.Position.Key == IBin.EPosition.IN_GAME)
                                     {
                                         Account.Bin.Position = new(IBin.EPosition.MAIN_MENU, DateTime.Now);
                                         Account.Update();
                                     }
-
-                                    Account.Setup.Date.Left = null;
-                                    Account.Setup.Date.Update();
                                 }
                                 else if (Line == "REJECT_BAD_PASSWORD")
                                 {
                                     Account.Logger.LogGenericWarning("Неправильный пароль.");
-
-                                    foreach (var X in Auto.Server.List
-                                        .Where(x => x.IP == Account.Server.IP)
-                                        .ToList())
-                                    {
-                                        X.Selected = false;
-                                        X.Password = null;
-                                    }
-
-                                    Auto.Server.Seek = null;
-                                    Auto.Server.Bookmark = false;
-
-                                    Account.Server.IP = null;
-                                    Account.Server.Password = null;
 
                                     Account.Update(EUpdate.Server);
                                 }
@@ -2955,8 +2855,6 @@ namespace Granger
                                 else if (Line == "REJECT_SERVER_FULL")
                                 {
                                     Account.Logger.LogGenericWarning("Сервер заполнен.");
-
-                                    await Account.Connect();
                                 }
                                 else if (Line == "REJECT_CONNECT_FROM_LOBBY")
                                 {
@@ -2973,56 +2871,7 @@ namespace Granger
 
                                         if (!string.IsNullOrEmpty(_Data))
                                         {
-                                            if (_Type == "SERVER")
-                                            {
-                                                var _Server = JsonConvert.DeserializeObject<IServer>(_Data);
-
-                                                if (_Server is not null)
-                                                {
-                                                    Account.Server = _Server;
-
-                                                    if (!string.IsNullOrEmpty(Account.Server.IP))
-                                                    {
-                                                        bool Retry = true;
-
-                                                    Retry:
-
-                                                        await Semaphore.WaitAsync();
-
-                                                        try
-                                                        {
-                                                            var T = Auto.Server.List
-                                                                .Where(x => x.IP == Account.Server.IP)
-                                                                .ToList();
-
-                                                            if (T.Any())
-                                                            {
-                                                                foreach (var X in T)
-                                                                {
-                                                                    X.Selected = true;
-                                                                    X.Password = Account.Server.Password;
-                                                                }
-                                                            }
-                                                            else if (Auto.Server.List.Count == 0)
-                                                            {
-                                                                if (Retry)
-                                                                {
-                                                                    await Server(true);
-
-                                                                    Retry = false;
-
-                                                                    goto Retry;
-                                                                }
-                                                            }
-                                                        }
-                                                        finally
-                                                        {
-                                                            Semaphore.Release();
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            else if (_Type == "BIN")
+                                            if (_Type == "BIN")
                                             {
                                                 var _Bin = JsonConvert.DeserializeObject<IBin>(_Data);
 
@@ -3503,8 +3352,8 @@ namespace Granger
             {
                 get => Pay.ToString("C", Auto.Config!.Steam.Culture);
             }
-                    
-            
+
+
             public string IReceive
             {
                 get => Receive.ToString("C", Auto.Config!.Steam.Culture);
@@ -3555,64 +3404,6 @@ namespace Granger
         #endregion
 
         [JsonIgnore]
-        public TimeSpan? Left
-        {
-            get
-            {
-                var List = AccountList
-                    .Where(x => x.Bin.Launched)
-                    .Where(x => x.Bin.Position.Key == IAccount.IBin.EPosition.IN_GAME)
-                    .ToList();
-
-                if (List.Count > 0)
-                {
-                    long T = Convert.ToInt64(List.Average(x =>
-                    {
-                        var Value = x.Bin.Position.Value;
-
-                        Value = Value.AddHours(3);
-                        Value = Value.AddMinutes(30);
-
-                        if (x.Setup.Date.Another is not null)
-                        {
-                            if (x.Setup.Date.Another.Item1.Hours > 0)
-                            {
-                                Value = Value.AddHours(x.Setup.Date.Another.Item1.Hours);
-                            }
-
-                            if (x.Setup.Date.Another.Item1.Minutes > 0)
-                            {
-                                Value = Value.AddMinutes(x.Setup.Date.Another.Item1.Minutes);
-                            }
-                        }
-
-                        var Left = Value - DateTime.Now;
-
-                        if (Left.Ticks > DateTime.MaxValue.Ticks ||
-                            Left.Ticks < DateTime.MinValue.Ticks)
-                        {
-                            return 0;
-                        }
-
-                        x.Setup.Date.Left = Tuple.Create(
-                            Value,
-                            Left
-                        );
-
-                        return Left.Ticks;
-                    }));
-
-                    if (T > 0)
-                    {
-                        return new TimeSpan(T);
-                    }
-                }
-
-                return null;
-            }
-        }
-
-        [JsonIgnore]
         public Tuple<int, string> Together
         {
             get => Tuple.Create(
@@ -3637,21 +3428,12 @@ namespace Granger
 
         public enum EUpdate : byte
         {
-            Left,
             Storage,
             Audit
         }
 
         public bool Update(params EUpdate[] _)
         {
-            if (_.Contains(EUpdate.Left))
-            {
-                if (Auto.Type == IAuto.EType.CSGO)
-                {
-                    NotifyPropertyChanged(nameof(Left));
-                }
-            }
-
             if (_.Contains(EUpdate.Storage))
             {
                 Storage = AccountList

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -180,38 +179,6 @@ namespace Granger
                 get => Type == EType.CSGO || Type == EType.TF2;
             }
 
-            private int _Limit;
-
-            public int Limit
-            {
-                get => _Limit;
-                set
-                {
-                    _Limit = value;
-
-                    NotifyPropertyChanged(nameof(Limit));
-                    NotifyPropertyChanged(nameof(LimitTick));
-                }
-            }
-
-            public string LimitTick
-            {
-                get => Limit.ToString();
-            }
-
-            private int _Maximum;
-
-            public int Maximum
-            {
-                get => _Maximum;
-                set
-                {
-                    _Maximum = value;
-
-                    NotifyPropertyChanged(nameof(Maximum));
-                }
-            }
-
             private bool _Fee;
 
             public bool Fee
@@ -287,607 +254,6 @@ namespace Granger
                     _Exclude = value;
 
                     NotifyPropertyChanged(nameof(Exclude));
-                }
-            }
-
-            #endregion
-
-            #region Server
-
-            public class IServer : INotifyPropertyChanged
-            {
-                private bool _Enabled;
-
-                public bool Enabled
-                {
-                    get => _Enabled;
-                    set
-                    {
-                        _Enabled = value;
-
-                        NotifyPropertyChanged(nameof(Enabled));
-                    }
-                }
-
-                private bool _Selected;
-
-                public bool Selected
-                {
-                    get => _Selected;
-                    set
-                    {
-                        if (value)
-                        {
-                            Auto.Config!.Account = null;
-                        }
-
-                        _Selected = value;
-
-                        NotifyPropertyChanged(nameof(Selected));
-                    }
-                }
-
-                private string? _Seek;
-
-                public string? Seek
-                {
-                    get => _Seek;
-                    set
-                    {
-                        _Seek = value;
-
-                        NotifyPropertyChanged(nameof(Seek));
-                    }
-                }
-
-                #region Seek
-
-                private ICommand? _OnSeek;
-
-                public ICommand? OnSeek
-                {
-                    get
-                    {
-                        return _OnSeek ??= new RelayCommand(_ => Init());
-                    }
-                }
-
-                #endregion
-
-                private bool _Bookmark;
-
-                public bool Bookmark
-                {
-                    get => _Bookmark;
-                    set
-                    {
-                        _Bookmark = value;
-
-                        NotifyPropertyChanged(nameof(Bookmark));
-                    }
-                }
-
-                #region Bookmark
-
-                private ICommand? _OnBookmark;
-
-                public ICommand? OnBookmark
-                {
-                    get
-                    {
-                        return _OnBookmark ??= new RelayCommand(_ =>
-                        {
-                            if (Bookmark)
-                            {
-                                foreach (var X in List.Where(x => x.Checked))
-                                {
-                                    X.Checked = false;
-                                }
-
-                                if (string.IsNullOrEmpty(Seek))
-                                {
-                                    Init();
-                                }
-                                else
-                                {
-                                    Seek = null;
-                                }
-                            }
-                            else
-                            {
-                                Init();
-                            }
-                        });
-                    }
-                }
-
-                #endregion
-
-                #region Version
-
-                public class IVersion : INotifyPropertyChanged
-                {
-                    public List<Version> List { get; set; }
-
-                    public IVersion(IEnumerable<Version> List)
-                    {
-                        this.List = List
-                            .OrderBy(x => x)
-                            .Reverse()
-                            .ToList();
-                    }
-
-                    private Version? _Value;
-
-                    public Version? Value
-                    {
-                        get => _Value;
-                        set
-                        {
-                            _Value = value;
-
-                            NotifyPropertyChanged(nameof(Value));
-                        }
-                    }
-
-                    #region Value
-
-                    private ICommand? _OnValue;
-
-                    [JsonIgnore]
-                    public ICommand? OnValue
-                    {
-                        get
-                        {
-                            return _OnValue ??= new RelayCommand(_ => Value = null);
-                        }
-                    }
-
-                    #endregion
-
-                    public event PropertyChangedEventHandler? PropertyChanged;
-
-                    public void NotifyPropertyChanged(string? propertyName = null)
-                    {
-                        PropertyChanged?.Invoke(this, new(propertyName));
-                    }
-                }
-
-                private IVersion? _Version;
-
-                public IVersion? Version
-                {
-                    get => _Version;
-                    set
-                    {
-                        _Version = value;
-
-                        NotifyPropertyChanged(nameof(Version));
-                    }
-                }
-
-                #endregion
-
-                #region List
-
-                public class IList : INotifyPropertyChanged
-                {
-                    private bool _Selected;
-
-                    [JsonIgnore]
-                    public bool Selected
-                    {
-                        get => _Selected;
-                        set
-                        {
-                            _Selected = value;
-
-                            NotifyPropertyChanged(nameof(Selected));
-                        }
-                    }
-
-                    private bool _Visibility;
-
-                    [JsonIgnore]
-                    public bool Visibility
-                    {
-                        get => _Visibility;
-                        set
-                        {
-                            _Visibility = value;
-
-                            NotifyPropertyChanged(nameof(Visibility));
-                        }
-                    }
-
-                    private bool _IsOpen = true;
-
-                    [JsonIgnore]
-                    public bool IsOpen
-                    {
-                        get => _IsOpen;
-                        set
-                        {
-                            _IsOpen = value;
-
-                            NotifyPropertyChanged(nameof(IsOpen));
-                        }
-                    }
-
-                    private bool _Checked;
-
-                    [JsonIgnore]
-                    public bool Checked
-                    {
-                        get => _Checked;
-                        set
-                        {
-                            _Checked = value;
-
-                            NotifyPropertyChanged(nameof(Checked));
-                        }
-                    }
-
-                    #region Checked
-
-                    private ICommand? _OnChecked;
-
-                    [JsonIgnore]
-                    public ICommand? OnChecked
-                    {
-                        get
-                        {
-                            return _OnChecked ??= new RelayCommand(_ => Checked = Convert.ToBoolean(_));
-                        }
-                    }
-
-                    #endregion
-
-                    private string _IP = "";
-
-                    [JsonProperty("addr", Required = Required.Always)]
-                    public string IP
-                    {
-                        get => _IP;
-                        private set
-                        {
-                            _IP = value;
-
-                            NotifyPropertyChanged(nameof(IP));
-                        }
-                    }
-
-                    private string? _Password;
-
-                    [JsonIgnore]
-                    public string? Password
-                    {
-                        get => _Password;
-                        set
-                        {
-                            _Password = value;
-
-                            NotifyPropertyChanged(nameof(Password));
-                        }
-                    }
-
-                    private string _Name = "";
-
-                    [JsonProperty("name", Required = Required.Always)]
-                    public string Name
-                    {
-                        get => _Name;
-                        private set
-                        {
-                            if (!string.IsNullOrEmpty(value))
-                            {
-                                value = value.TrimStart();
-                            }
-
-                            _Name = value;
-
-                            NotifyPropertyChanged(nameof(Name));
-                        }
-                    }
-
-                    private Version? _Version;
-
-                    [JsonProperty("version", Required = Required.DisallowNull)]
-                    public Version? Version
-                    {
-                        get => _Version;
-                        private set
-                        {
-                            _Version = value;
-
-                            NotifyPropertyChanged(nameof(Version));
-                        }
-                    }
-
-                    private string? _Map;
-
-                    [JsonProperty("map", Required = Required.DisallowNull)]
-                    public string? Map
-                    {
-                        get => _Map;
-                        private set
-                        {
-                            _Map = value;
-
-                            NotifyPropertyChanged(nameof(Map));
-                        }
-                    }
-
-                    private bool _Progress;
-
-                    [JsonIgnore]
-                    public bool Progress
-                    {
-                        get => _Progress;
-                        set
-                        {
-                            _Progress = value;
-
-                            NotifyPropertyChanged(nameof(Progress));
-                        }
-                    }
-
-                    private uint _Min;
-
-                    [JsonProperty("players", Required = Required.Always)]
-                    public uint Min
-                    {
-                        get => _Min;
-                        private set
-                        {
-                            _Min = value;
-
-                            NotifyPropertyChanged(nameof(Min));
-                        }
-                    }
-
-                    private uint _Max;
-
-                    [JsonProperty("max_players", Required = Required.Always)]
-                    public uint Max
-                    {
-                        get => _Max;
-                        private set
-                        {
-                            _Max = value;
-
-                            NotifyPropertyChanged(nameof(Max));
-                        }
-                    }
-
-                    public async Task Update()
-                    {
-                        Progress = true;
-
-                        try
-                        {
-                            var ServerList = await GetServerList(IP, false);
-
-                            if (ServerList == null || ServerList.Count == 0) return;
-
-                            foreach (var T in ServerList)
-                            {
-                                Name = T.Name;
-                                Map = T.Map;
-
-                                Min = T.Min;
-                                Max = T.Max;
-                            }
-                        }
-                        finally
-                        {
-                            Progress = false;
-                        }
-                    }
-
-                    #region Update
-
-                    private ICommand? _OnUpdate;
-
-                    [JsonIgnore]
-                    public ICommand? OnUpdate
-                    {
-                        get
-                        {
-                            return _OnUpdate ??= new RelayCommand(X => _ = Update());
-                        }
-                    }
-
-                    #endregion
-
-                    public event PropertyChangedEventHandler? PropertyChanged;
-
-                    public void NotifyPropertyChanged(string? propertyName = null)
-                    {
-                        PropertyChanged?.Invoke(this, new(propertyName));
-                    }
-                }
-
-                private List<IList> _List = new();
-
-                public List<IList> List
-                {
-                    get => _List;
-                    set
-                    {
-                        _List = value;
-
-                        NotifyPropertyChanged(nameof(List));
-                    }
-                }
-
-                #endregion
-
-                private int _Index;
-
-                public int Index
-                {
-                    get => _Index;
-                    set
-                    {
-                        _Index = value;
-
-                        NotifyPropertyChanged(nameof(Index));
-                    }
-                }
-
-                private int _Page;
-
-                public int Page
-                {
-                    get => _Page;
-                    set
-                    {
-                        _Page = value;
-
-                        NotifyPropertyChanged(nameof(Page));
-                    }
-                }
-
-                private readonly int Max = 9;
-
-                public void Init()
-                {
-                    List.ForEach(x => x.Visibility = false);
-
-                    var T = List
-                        .Where(x =>
-                        {
-                            if (string.IsNullOrEmpty(Seek))
-                            {
-                                return true;
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    return Regex.IsMatch(x.IP, Seek, RegexOptions.IgnoreCase) || Regex.IsMatch(x.Name, Seek, RegexOptions.IgnoreCase);
-                                }
-                                catch (RegexParseException)
-                                {
-                                    return false;
-                                }
-                            }
-                        })
-                        .ToList();
-
-                    if (Bookmark)
-                    {
-                        T = T.Where(x => x.Selected)
-                             .ToList();
-                    }
-
-                    if (Version is not null &&
-                        Version.Value is not null)
-                    {
-                        T = T.Where(x => x.Version == Version.Value)
-                             .ToList();
-                    }
-
-                    Page = T.Count / Max;
-
-                    if (T.Count % Max > 0)
-                    {
-                        Page++;
-                    }
-
-                    if (Index < 0)
-                    {
-                        Index = Page - 1;
-                    }
-
-                    if (Index >= Page)
-                    {
-                        Index = 0;
-                    }
-
-                    T.ForEach(x => x.Visibility = false);
-
-                    T.Skip(Index * Max)
-                     .Take(Max)
-                     .ToList()
-                     .ForEach(x => x.Visibility = true);
-                }
-
-                #region Previous
-
-                private ICommand? _OnPrevious;
-
-                public ICommand? OnPrevious
-                {
-                    get
-                    {
-                        return _OnPrevious ??= new RelayCommand(_ =>
-                        {
-                            Index--;
-
-                            Init();
-                        });
-                    }
-                }
-
-                #endregion
-
-                #region Next
-
-                private ICommand? _OnNext;
-
-                public ICommand? OnNext
-                {
-                    get
-                    {
-                        return _OnNext ??= new RelayCommand(_ =>
-                        {
-                            Index++;
-
-                            Init();
-                        });
-                    }
-                }
-
-                #endregion
-
-                public void Reset()
-                {
-                    Enabled = false;
-                    Selected = false;
-
-                    if (Auto.Index == 3)
-                    {
-                        Auto.Index = 0;
-                    }
-
-                    Seek = null;
-                    Bookmark = false;
-                    Version = null;
-                    List = new();
-                    Page = 0;
-                    Index = 0;
-                }
-
-                public event PropertyChangedEventHandler? PropertyChanged;
-
-                public void NotifyPropertyChanged(string? propertyName = null)
-                {
-                    PropertyChanged?.Invoke(this, new(propertyName));
-                }
-            }
-
-            private IServer _Server = new();
-
-            public IServer Server
-            {
-                get => _Server;
-                set
-                {
-                    _Server = value;
-
-                    NotifyPropertyChanged(nameof(Server));
                 }
             }
 
@@ -1772,8 +1138,6 @@ namespace Granger
 
             await Init("");
 
-            RetrieveInventory();
-
             Auto.Developer.List = new List<IAuto.IDeveloper.IDebug>()
             {
                 new IAuto.IDeveloper.IDebug(Guid.NewGuid(), "CASE #1 (GENERATE RANDOM VALUE IN CLUSTER)", null, async (Guid) =>
@@ -2360,11 +1724,6 @@ namespace Granger
                         {
                             if (LoginUser is not null)
                             {
-                                if (!Account.Setup.Date.Launch.HasValue || LoginUser.DateTime > Account.Setup.Date.Launch)
-                                {
-                                    Account.Setup.Date.Launch = LoginUser.DateTime;
-                                }
-
                                 Account.Setup.PersonaName = LoginUser.PersonaName;
                                 Account.Setup.RememberPassword = LoginUser.RememberPassword;
                             }
@@ -2450,31 +1809,6 @@ namespace Granger
             }
         }
 
-        private void RetrieveInventory()
-        {
-            if (Auto.Config!.AccountList.Any(x => x.Bin.Inventory is not null))
-            {
-                Auto.Inventory.Enabled = true;
-
-                _ = Inventory();
-
-                foreach (var X in Auto.Config!.Storage
-                    .SelectMany(x => x.Cluster)
-                    .DistinctBy(x => x.Value.Name))
-                {
-                    if (Auto.Inventory.Dictionary.ContainsKey(X.Value.Name)) continue;
-
-                    if (X.Value.Price.HasValue)
-                    {
-                        Auto.Inventory.Dictionary.Add(
-                            X.Value.Name,
-                            (X.Value.Icon, X.Value.Price.Value));
-                    }
-                }
-            }
-        }
-
-
         private void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
             try
@@ -2548,16 +1882,6 @@ namespace Granger
             }
         }
 
-        private void MetroWindow_StateChanged(object? sender, EventArgs e)
-        {
-            if (!Auto.Sandbox || !Auto.Inventory.Selected) return;
-
-            if (WindowState == WindowState.Normal)
-            {
-                Auto.Config!.Update(IConfig.EUpdate.Left);
-            }
-        }
-
         private void Watcher_Click(object sender, RoutedEventArgs e)
         {
             if (Watcher == null || Watcher.IsClosed)
@@ -2569,31 +1893,6 @@ namespace Granger
             {
                 Watcher.Close();
                 Watcher = null;
-            }
-        }
-
-        private void Calendar_Click(object sender, RoutedEventArgs e)
-        {
-            if (Calendar == null || Calendar.IsClosed)
-            {
-                var AccountList = Auto.Config!.AccountList
-                    .Where(X => X.Setup.Date.Value == IConfig.IAccount.ISetup.IDate.EValue.Another)
-                    .Where(x => x.Setup.Date.Another is not null)
-                    .ToList();
-
-                if (AccountList.Count > 0)
-                {
-                    Calendar = new Calendar(
-                        Auto.Config.Storage.SelectMany(x => x.List).ToList(),
-                        AccountList);
-
-                    Calendar.Show();
-                }
-            }
-            else
-            {
-                Calendar.Close();
-                Calendar = null;
             }
         }
 
@@ -2627,13 +1926,21 @@ namespace Granger
             }
         }
 
-        private void Left_MouseEnter(object sender, MouseEventArgs e)
+        private void Calendar_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not TextBlock TextBlock) return;
+            if (Calendar == null || Calendar.IsClosed)
+            {
+                Calendar = new Calendar(Auto.Config!.Storage
+                    .SelectMany(x => x.List)
+                    .ToList());
 
-            Sleep(TextBlock, 10 * 1000);
-
-            Auto.Config!.Update(IConfig.EUpdate.Left);
+                Calendar.Show();
+            }
+            else
+            {
+                Calendar.Close();
+                Calendar = null;
+            }
         }
 
         private void Add_Click(object sender, RoutedEventArgs e) => Add();
@@ -2743,22 +2050,6 @@ namespace Granger
 
                     break;
 
-                case IConfig.ESort.New:
-                    foreach (var X in Auto.Config.AccountList)
-                    {
-                        X.Visibility = !X.Setup.Configured.HasValue || !X.Setup.Configured.Value;
-                    }
-
-                    break;
-
-                case IConfig.ESort.Configured:
-                    foreach (var X in Auto.Config.AccountList)
-                    {
-                        X.Visibility = X.Setup.Configured.HasValue && X.Setup.Configured.Value;
-                    }
-
-                    break;
-
                 case IConfig.ESort.Launch:
                     Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
                         Auto.Config.AccountList
@@ -2811,9 +2102,7 @@ namespace Granger
                 }
                 else
                 {
-                    Auto.Maximum = List.Count;
-
-                    Logger.LogGenericDebug($"Было сгенерировано всего {Auto.Maximum} окон, по горизонтали - {H}, по вертикали - {V}.");
+                    Logger.LogGenericDebug($"Было сгенерировано всего {List.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
 
                     Auto.Location = List;
 
@@ -3965,17 +3254,195 @@ namespace Granger
             return;
         }
 
+
+        #region Lobby
+
+        private async void Lobby_Click(object sender, RoutedEventArgs e) => await Lobby();
+
+        private static async Task Lobby()
+        {
+            Clipboard.Clear();
+
+            var AccountList = Auto.Config!.AccountList
+                .Where(x => x.Bin.Launched)
+                .OrderBy(x => x.Bin.Location!.Index)
+                .ToList();
+
+            foreach (var Account in AccountList)
+            {
+                if (Account.GetWindow())
+                {
+                    Account.SetForeground();
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        SendKey(Account.Bin.Window!.Handle, ConsoleKey.Escape);
+                    }
+                }
+            }
+
+            var T = AccountList
+                .Take(5)
+                .Select((x, i) => (Account: x, Index: i))
+                .ToList();
+
+            foreach (var Account in T
+                .Select(x => x.Account)
+                .Where(x => string.IsNullOrEmpty(x.Setup.LobbyCode))
+                .ToList())
+            {
+                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
+                {
+                    await SetCursorPosition(Account,
+                        Account.Bin.Window!.Width.Value - 10,
+                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
+
+                    await SetCursorPosition(Account,
+                        Account.Bin.Window!.Width.Value - 75,
+                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
+
+                    await Task.Delay(1000);
+
+                    while (string.IsNullOrEmpty(Account.Setup.LobbyCode))
+                    {
+                        await SetCursorPosition(Account,
+                            Account.Bin.Window!.Width.Value - 175,
+                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Code
+
+                        await Task.Delay(5000);
+
+                        string LobbyCode = Clipboard.GetText();
+
+                        if (string.IsNullOrEmpty(LobbyCode)) continue;
+
+                        if (Regex.IsMatch(LobbyCode, "[a-zA-Z0-9]+-[a-zA-Z0-9]+"))
+                        {
+                            if (AccountList.Any(x => x.Setup.LobbyCode == LobbyCode)) continue;
+
+                            Account.Setup.LobbyCode = LobbyCode;
+
+                            Auto.Config.Save();
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 150,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Close
+                        }
+                    }
+                }
+
+                await Task.Delay(1000);
+            }
+
+            foreach ((IConfig.IAccount Account, int Index) in T)
+            {
+                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
+                {
+                    if (Index == 0)
+                    {
+                        Helper.SwitchInputMethod(Account.Bin.Window.Handle);
+
+                        foreach (string? LobbyCode in T
+                            .Where(x => x.Index > 0)
+                            .Select(x => x.Account.Setup.LobbyCode)
+                            .ToList())
+                        {
+                            if (string.IsNullOrEmpty(LobbyCode)) continue;
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 10,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 75,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
+
+                            await Task.Delay(1000);
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 200,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Input
+
+                            await Task.Delay(500);
+
+                            foreach (char _ in LobbyCode.ToCharArray())
+                            {
+                                byte? Byte = Helper.ToHexChar(_);
+
+                                if (Byte == null) continue;
+
+                                Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
+                            }
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 200,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Profile
+
+                            await Task.Delay(500);
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 80,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 140)); // Lobby Invite
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 150,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 180)); // Lobby Close
+
+                            await Task.Delay(1000);
+                        }
+                    }
+                    else
+                    {
+                        await SetCursorPosition(Account,
+                            Account.Bin.Window!.Width.Value - 10,
+                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 95)); // Lobby Accept
+                    }
+                }
+
+                await Task.Delay(2500);
+            }
+        }
+
+        private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
+        {
+            if (Account.Bin.Window!.X.HasValue && Account.Bin.Window!.Y.HasValue)
+            {
+                int X = Width + Account.Bin.Window!.X.Value;
+                int Y = Height + Account.Bin.Window!.Y.Value;
+
+                Account.SetForeground();
+
+                await Task.Delay(250);
+
+                Helper.SetCursorPosition(X, Y);
+
+                await Task.Delay(Hover ? 1000 : 500);
+
+                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            }
+        }
+
+        private static void SendKey(IntPtr hWnd, ConsoleKey KeyCode)
+        {
+            uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
+            uint _ = 1 | MapVirtualKey << 16;
+
+            Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+            Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+        }
+
+        #endregion
+
         #region Setup
 
         public class ILoginUser
         {
-            public ILoginUser(string SteamID, string AccountName, string PersonaName, string RememberPassword, string AutoLogin, string Unix)
+            public ILoginUser(string SteamID, string AccountName, string PersonaName, string RememberPassword, string AutoLogin)
             {
                 this.SteamID = ulong.Parse(SteamID);
                 this.AccountName = AccountName;
                 this.PersonaName = PersonaName;
                 this.RememberPassword = RememberPassword == "1" && AutoLogin == "1";
-                this.Unix = long.Parse(Unix);
             }
 
             public ulong SteamID { get; }
@@ -3990,13 +3457,6 @@ namespace Granger
             public string PersonaName { get; }
 
             public bool RememberPassword { get; }
-
-            public long Unix { get; }
-
-            public DateTime DateTime
-            {
-                get => Helper.ConvertFromUnixTime(Unix);
-            }
         }
 
         private static (string? Value, ILoginUser? LoginUser, bool Success) GetLoginUser(IConfig.IAccount Account)
@@ -4047,13 +3507,11 @@ namespace Granger
                                     int Index_PersonaName = Array.IndexOf(Find, AccountName.Value) + 1;
                                     int Index_RememberPassword = Array.IndexOf(Find, AccountName.Value) + 2;
                                     int Index_AutoLogin = Array.IndexOf(Find, AccountName.Value) + 5;
-                                    int Index_Unix = Array.IndexOf(Find, AccountName.Value) + 7;
 
                                     var SteamID = Regex.Match(Find[Index_SteamID], "\"([^\"]+)");
                                     var PersonaName = Regex.Match(Find[Index_PersonaName], $"\t\t\"PersonaName\"\t\t\"([^\n]+)\"");
                                     var RememberPassword = Regex.Match(Find[Index_RememberPassword], $"\t\t\"RememberPassword\"\t\t\"([^\n]+)\"");
                                     var AutoLogin = Regex.Match(Find[Index_AutoLogin], $"\t\t\"AllowAutoLogin\"\t\t\"([^\n]+)\"");
-                                    var Unix = Regex.Match(Find[Index_Unix], $"\t\t\"Timestamp\"\t\t\"([^\n]+)\"");
 
                                     if (!SteamID.Success || SteamID.Groups.Count <= 0 &&
                                         !SteamID.Groups[1].Success || string.IsNullOrEmpty(SteamID.Groups[1].Value))
@@ -4075,16 +3533,9 @@ namespace Granger
                                     {
                                         return ("Не удалось получить строчку \"AutoLogin\".", null, false);
                                     }
-                                    else if (!Unix.Success || Unix.Groups.Count <= 0 &&
-                                             !Unix.Groups[1].Success || string.IsNullOrEmpty(Unix.Groups[1].Value))
-                                    {
-                                        return ("Не удалось получить строчку \"Unix\".", null, false);
-                                    }
                                     else
                                     {
-
-
-                                        return (null, new(SteamID.Groups[1].Value, AccountName.Groups[1].Value, PersonaName.Groups[1].Value, RememberPassword.Groups[1].Value, AutoLogin.Groups[1].Value, Unix.Groups[1].Value), true);
+                                        return (null, new(SteamID.Groups[1].Value, AccountName.Groups[1].Value, PersonaName.Groups[1].Value, RememberPassword.Groups[1].Value, AutoLogin.Groups[1].Value), true);
                                     }
                                 }
                             }
@@ -4303,7 +3754,7 @@ namespace Granger
                     Account.Setup.Configured = ConfigureCheck(Account.Setup);
 
                     Account.Setup.PersonaName = LoginUser.AccountName;
-                    Account.Setup.Date.Launch = LoginUser.DateTime;
+                    Account.Setup.RememberPassword = LoginUser.RememberPassword;
 
                     Auto.Config.Save();
 
@@ -4522,7 +3973,7 @@ namespace Granger
                                 {
                                     var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config!.Resolution);
 
-                                    const byte VIDEO_MODE_LINE = 52;
+                                    const byte VIDEO_MODE_LINE = 54;
 
                                     if (Resolution == null || !await SetVideoMode(CONFIG, VIDEO_MODE_LINE, Resolution.Dimension)) return false;
                                 }
@@ -5020,296 +4471,6 @@ namespace Granger
 
         #endregion
 
-        #region Server
-
-        private async void Server_Click(object sender, RoutedEventArgs e) => await Server();
-
-        public static async Task Server(bool T = false)
-        {
-            if (T)
-            {
-                Auto.Server.Enabled = true;
-            }
-
-            if (Auto.Server.Enabled)
-            {
-                var ServerList = await GetServerList();
-
-                if (ServerList == null || ServerList.Count == 0)
-                {
-                    Logger.LogGenericWarning("Не удалось найти пользовательские сервера!");
-
-                    Auto.Server.Reset();
-                }
-                else
-                {
-                    Logger.LogGenericInfo($"{Lang.Declination(new string[] { "Найден", "Найдено" }, ServerList.Count)} {ServerList.Count} {Lang.Declination(new string[] { "сервер", "сервера", "серверов" }, ServerList.Count)}.");
-
-                    Auto.Server.List = ServerList;
-                    Auto.Server.Version = new(ServerList
-                        .Where(x => x.Version is not null)
-                        .GroupBy(x => x.Version!)
-                        .Select(x => x.Key));
-
-                    Auto.Server.Init();
-                }
-            }
-            else
-            {
-                Auto.Server.Reset();
-            }
-        }
-
-        #region Server List
-
-        public class IServerList
-        {
-            [JsonProperty("response", Required = Required.Always)]
-            public IResponse Response { get; private set; } = new();
-
-            public class IResponse
-            {
-                [JsonProperty("servers", Required = Required.Always)]
-                public List<IAuto.IServer.IList> ServerList { get; private set; } = new();
-            }
-        }
-
-        #endregion
-
-        public static async Task<List<IAuto.IServer.IList>?> GetServerList(string? IP = null, bool Progress = true)
-        {
-            try
-            {
-                if (Progress)
-                {
-                    Auto.Progress.Server = true;
-                }
-
-                var Client = new RestClient(
-                    new RestClientOptions()
-                    {
-                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
-                        MaxTimeout = 300000
-                    });
-
-                var Request = new RestRequest(string.Concat(
-                    "https://api.steampowered.com/IGameServersService",
-                    $"/GetServerList/v1/?key={Auto.Config!.Steam.APIKey}&limit={(string.IsNullOrEmpty(IP) ? int.MaxValue : 1)}&filter=",
-                    string.IsNullOrEmpty(IP)
-                        ? @"\appid\" + Auto.AppID + @"\gametype\idle"
-                        : @"\gameaddr\" + IP));
-
-                for (byte i = 0; i < 3; i++)
-                {
-                    try
-                    {
-                        var Execute = await Client.ExecuteGetAsync(Request);
-
-                        if ((int)Execute.StatusCode == 429)
-                        {
-                            Logger.LogGenericWarning("Слишком много запросов!");
-
-                            await Task.Delay(TimeSpan.FromMinutes(2.5));
-
-                            continue;
-                        }
-
-                        if (string.IsNullOrEmpty(Execute.Content))
-                        {
-                            if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                            {
-                                Logger.LogGenericWarning("Ответ пуст!");
-                            }
-                            else
-                            {
-                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                            }
-                        }
-                        else
-                        {
-                            if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                            {
-                                if (Logger.Helper.IsValidJson(Execute.Content))
-                                {
-                                    try
-                                    {
-                                        var JSON = JsonConvert.DeserializeObject<IServerList>(Execute.Content);
-
-                                        if (JSON == null)
-                                        {
-                                            Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
-                                        }
-                                        else
-                                        {
-                                            if (JSON.Response.ServerList.Count > 0)
-                                            {
-                                                return JSON.Response.ServerList
-                                                    .Where(x =>
-                                                    {
-                                                        if (string.IsNullOrEmpty(x.Map)) return false;
-
-                                                        return x.Map.ToUpper().Contains("IDLE");
-                                                    })
-                                                    .OrderBy(x => x.Min)
-                                                    .ToList();
-                                            }
-
-                                            break;
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        Logger.LogGenericException(e);
-                                    }
-                                }
-                                else
-                                {
-                                    Logger.LogGenericWarning($"Ошибка: {Execute.Content}");
-                                }
-                            }
-                            else
-                            {
-                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                            }
-                        }
-
-                        await Task.Delay(2500);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.LogGenericException(e);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-            finally
-            {
-                if (Progress)
-                {
-                    Auto.Progress.Server = false;
-                }
-            }
-
-            return null;
-        }
-
-        private void Version_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Auto.Server.Init();
-        }
-
-        private void Server_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (Auto.Server.Bookmark)
-            {
-                Auto.Server.Init();
-            }
-        }
-
-        #region Connect
-
-        private void Connect_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is not Button Button || Button.DataContext is not IAuto.IServer.IList Server) return;
-
-            Connect(Server);
-        }
-
-        private static void Connect(IAuto.IServer.IList Server)
-        {
-            var AccountList = Auto.Config!.AccountList
-                .Where(x => x.Selected)
-                .ToList();
-
-            if (AccountList.Count == 0)
-            {
-                Logger.LogGenericWarning("Выделите нужные аккаунты!");
-
-                return;
-            }
-
-            foreach (var Account in AccountList)
-            {
-                Account.Server.IP = Server.IP;
-                Account.Server.Password = Server.Password;
-
-                Account.Update(IConfig.IAccount.EUpdate.Server);
-
-                Account.Selected = false;
-            }
-        }
-
-        #endregion
-
-        #region IP
-
-        private async void GetServerIP_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (sender is not Button Button || Button.DataContext is not IAuto.IServer.IList Server) return;
-
-                Server.IsOpen = false;
-
-                await GetServerIP(Server);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogGenericException(ex);
-            }
-        }
-
-        private static async Task GetServerIP(IAuto.IServer.IList Server)
-        {
-            if (await Helper.SetText(Server.IP))
-            {
-                Logger.LogGenericInfo("IP ардес сервера был скопирован в буфер обмена.");
-            }
-            else
-            {
-                Logger.LogGenericWarning("Не удалось скопировать IP ардес сервера в буфер обмена.");
-            }
-        }
-
-        #endregion
-
-        #region Name
-
-        private async void GetServerName_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (sender is not Button Button || Button.DataContext is not IAuto.IServer.IList Server) return;
-
-                Server.IsOpen = false;
-
-                await GetServerName(Server);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogGenericException(ex);
-            }
-        }
-
-        private static async Task GetServerName(IAuto.IServer.IList Server)
-        {
-            if (await Helper.SetText(Server.Name))
-            {
-                Logger.LogGenericInfo("Название сервера было скопировано в буфер обмена.");
-            }
-            else
-            {
-                Logger.LogGenericWarning("Не удалось скопировать название сервера в буфер обмена.");
-            }
-        }
-
-        #endregion
-
-        #endregion
-
         #region Inventory
 
         private static IAuto.IWatcher WatcherInventory()
@@ -5328,7 +4489,7 @@ namespace Granger
 
         private async void Inventory_Click(object sender, RoutedEventArgs e) => await Inventory();
 
-        private async Task Inventory()
+        private static async Task Inventory()
         {
             try
             {
@@ -5355,8 +4516,6 @@ namespace Granger
                                 {
                                     Logger.LogGenericDebug("Проверка запущена.");
 
-                                    await SetСommunication();
-
                                     await SetInventory(Watcher, AccountList);
 
                                     Logger.LogGenericDebug("Проверка завершена.");
@@ -5364,11 +4523,9 @@ namespace Granger
 
                                 Auto.Inventory.Advance = false;
 
-                                Auto.Config!.Update(IConfig.EUpdate.Left);
-
                                 if (AccountList.Count == 0) break;
 
-                                for (uint i = N; i <= Auto.Config!.Inventory.Check * 60; i += N)
+                                for (uint i = N; i <= Auto.Config!.Inventory.Check * 30; i += N)
                                 {
                                     if (Watcher.Source.IsCancellationRequested) break;
 
@@ -5451,201 +4608,10 @@ namespace Granger
             }
         }
 
-        public static async Task SetСommunication()
+        private static async Task SetInventory(IAuto.IWatcher Watcher, List<IConfig.IAccount> AccountList)
         {
             try
             {
-                var Chat = await GetChat();
-
-                if (Chat is not null)
-                {
-                    byte[]? Source = GetSource();
-
-                    if (Source is not null)
-                    {
-                        string Caption = $"<code>Last Update: {DateTime.Now:G}</code>";
-
-                        if (Auto.Config!.Left.HasValue)
-                        {
-                            Caption += $"\n<code>Left ≈ {Auto.Config!.Left.Value:hh':'mm':'ss}</code>";
-                        }
-
-                        if (Chat.PinnedMessage == null)
-                        {
-                            int? MessageID = await SendPhoto(Caption, Source);
-
-                            if (MessageID.HasValue)
-                            {
-                                if (await PinChatMessage(MessageID.Value))
-                                {
-                                    Logger.LogGenericDebug($"Закрепленное сообщение успешно установленно! ({MessageID.Value})");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (await EditMessageMedia(Chat.PinnedMessage.MessageID, Caption, Source))
-                            {
-                                Logger.LogGenericDebug("Закрепленное сообщение успешно обновлено!");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-        }
-
-        public static byte[]? GetSource()
-        {
-            try
-            {
-                int _Width = (int)SystemParameters.WorkArea.Width;
-                int _Height = (int)SystemParameters.WorkArea.Height;
-
-                var Place = new Bitmap(_Width, _Height);
-
-                using Graphics _ = Graphics.FromImage(Place);
-
-                foreach (var Account in Auto.Config!.AccountList
-                    .Where(x => x.Bin.Launched)
-                    .ToList())
-                {
-                    if (Account.Bin.Location == null) continue;
-
-                    if (Account.Bin.Process.HasValue)
-                    {
-                        var X = Process.GetProcessById(Account.Bin.Process.Value);
-
-                        if (Helper.GetWindowRect(X.MainWindowHandle, out Helper.RECT RECT))
-                        {
-                            int Width = RECT.Right - RECT.Left;
-                            int Height = RECT.Bottom - RECT.Top;
-
-                            using Bitmap Bitmap = new(Width, Height);
-                            using Graphics Graphics = Graphics.FromImage(Bitmap);
-
-                            IntPtr hDC = Graphics.GetHdc();
-
-                            var V = Helper.PrintWindow(X.MainWindowHandle, hDC, 0);
-
-                            Graphics.ReleaseHdc(hDC);
-
-                            if (V)
-                            {
-                                _.DrawImage(
-                                    Bitmap,
-                                    Account.Bin.Location.Cordiant!.X,
-                                    Account.Bin.Location.Cordiant!.Y
-                                );
-                            }
-                            else
-                            {
-                                Logger.LogGenericException();
-                            }
-                        }
-                        else
-                        {
-                            Logger.LogGenericException();
-                        }
-                    }
-                }
-
-                using var MemoryStream = new MemoryStream();
-
-                Place.Save(MemoryStream, System.Drawing.Imaging.ImageFormat.Png);
-
-                return MemoryStream.ToArray();
-            }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-
-            return null;
-        }
-
-        public async Task SetInventory(IAuto.IWatcher Watcher, List<IConfig.IAccount> AccountList)
-        {
-            try
-            {
-                if (AccountList.Count > 0)
-                {
-                    await UpdateInventory(Watcher, AccountList);
-
-                    Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                    var Close = AccountList
-                        .Where(x => x.Bin.Inventory is not null)
-                        .Where(x => x.Bin.Inventory!.New >= Auto.Config!.Inventory.Max)
-                        .ToList();
-
-                    if (Close.Count > 0)
-                    {
-                        Logger.LogGenericInfo($"Закрываю {Close.Count} {Lang.Declination(new string[] { "аккаунт", "аккаунта", "аккаунтов" }, Close.Count)}.");
-
-                        Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                        foreach (var X in Close)
-                        {
-                            if (Watcher.Source.IsCancellationRequested) break;
-
-                            await CloseAccount(X);
-                        }
-                    }
-
-                    var Predicate = Auto.Config!.AccountList
-                        .Where(x => x.Setup.Configured.HasValue && x.Setup.Configured.Value && x.ASF.IsValid)
-                        .Where(x => x.Bin.Condition == 0)
-                        .Where(x => x.Setup.Date.Value == IConfig.IAccount.ISetup.IDate.EValue.Fresh)
-                        .ToList();
-
-                    if (Predicate.Count > 0)
-                    {
-                        if (Auto.Limit > Predicate.Count)
-                        {
-                            var Start = Predicate
-                                .Take(Auto.Limit - Predicate.Count)
-                                .ToList();
-
-                            if (Start.Count > 0)
-                            {
-                                Logger.LogGenericInfo($"Запускаю {Start.Count} {Lang.Declination(new string[] { "аккаунт", "аккаунта", "аккаунтов" }, Start.Count)}.");
-
-                                Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                                foreach (var X in Start)
-                                {
-                                    if (Watcher.Source.IsCancellationRequested) break;
-
-                                    await StartAccount(X);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                if (Auto.Developer.Debug)
-                {
-                    Logger.LogGenericDebug("Задача успешно отменена!");
-                }
-            }
-            catch (ObjectDisposedException) { }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-        }
-
-        private static async Task UpdateInventory(IAuto.IWatcher Watcher, List<IConfig.IAccount> AccountList)
-        {
-            try
-            {
-
                 if (AccountList.Count > 0)
                 {
                     Logger.LogGenericInfo($"{Lang.Declination(new string[] { "Найден", "Найдено" }, AccountList.Count)} {AccountList.Count} {Lang.Declination(new string[] { "аккаунт", "аккаунта", "аккаунтов" }, AccountList.Count)}.");

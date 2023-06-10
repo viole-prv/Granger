@@ -190,14 +190,14 @@ namespace GrangerServer
                         }
                         else if (Line == "QUIT")
                         {
-                            if (Account.Bin.Process > 0)
+                            if (Account.Bin.Window is not null && Account.Bin.Window.ShouldSerializeID())
                             {
                                 Logger.LogInfo($"[SERVER] -> KILL {AppName}");
 
                                 try
                                 {
                                     Process.GetProcesses()
-                                        .Where(x => x.Id == Account.Bin.Process)
+                                        .Where(x => x.Id == Account.Bin.Window.ID)
                                         .ToList()
                                         .ForEach(x => x.Kill());
                                 }
@@ -237,14 +237,6 @@ namespace GrangerServer
 
                             return;
                         }
-                        else if (Line == "SERVER")
-                        {
-                            if (!string.IsNullOrEmpty(Account.Server.IP))
-                            {
-                                if (Pipe.Any())
-                                    Pipe.Set($"{JsonConvert.SerializeObject(new { Type = "SERVER", Data = Account.Server })}");
-                            }
-                        }
                         else if (Line == "BIN")
                         {
                             if (Pipe.Any())
@@ -261,32 +253,7 @@ namespace GrangerServer
 
                                 if (!string.IsNullOrEmpty(_Data))
                                 {
-                                    if (_Type == "SERVER")
-                                    {
-                                        dynamic? _Server = JsonConvert.DeserializeObject<IConfig.IAccount.IServer>(_Data);
-
-                                        if (_Server is not null)
-                                        {
-                                            Account.Server = _Server;
-
-                                            if (!string.IsNullOrEmpty(Account.Server.IP))
-                                            {
-                                                var Process = new Process
-                                                {
-                                                    StartInfo = new ProcessStartInfo
-                                                    {
-                                                        WindowStyle = ProcessWindowStyle.Hidden,
-                                                        FileName = "cmd.exe",
-                                                        Arguments = $"/C call \"{Steam}\" steam://connect/{Account.Server.IP}{(string.IsNullOrEmpty(Account.Server.Password) ? "" : $"/{Account.Server.Password}")}"
-                                                    }
-                                                };
-
-                                                Process.Start();
-                                                Process.Dispose();
-                                            }
-                                        }
-                                    }
-                                    else if (_Type == "BIN")
+                                    if (_Type == "BIN")
                                     {
                                         var _Bin = JsonConvert.DeserializeObject<IConfig.IAccount.IBin>(_Data);
 

@@ -91,11 +91,6 @@ namespace GrangerServer
                 public bool ShouldSerializeVergin() => Vergin;
 
                 [JsonProperty]
-                public int? Process { get; set; }
-
-                public bool ShouldSerializeProcess() => Process.HasValue;
-
-                [JsonProperty]
                 public byte Condition { get; set; }
 
                 public bool ShouldSerializeCondition() => Condition > 0;
@@ -111,6 +106,75 @@ namespace GrangerServer
                 public KeyValuePair<EPosition, DateTime> Position { get; set; } = default;
 
                 public bool ShouldSerializePosition() => !Position.Equals(default(KeyValuePair<EPosition, DateTime>));
+
+                #region Window
+
+                public class IWindow
+                {
+                    [JsonProperty]
+                    public int ID { get; set; }
+
+                    public bool ShouldSerializeID() => ID > 0;
+
+                    [JsonProperty]
+                    public IntPtr Handle { get; set; }
+
+                    public bool ShouldSerializeHandle() => Handle != IntPtr.Zero;
+
+                    [JsonProperty]
+                    public int? X { get; set; }
+
+                    public bool ShouldSerializeX() => X.HasValue;
+
+                    [JsonProperty]
+                    public int? Y { get; set; }
+
+                    public bool ShouldSerializeY() => Y.HasValue;
+
+                    [JsonProperty]
+                    public int? Width { get; set; }
+
+                    public bool ShouldSerializeWidth() => Width.HasValue;
+
+                    [JsonProperty]
+                    public int? Height { get; set; }
+
+                    public bool ShouldSerializeHeight() => Height.HasValue;
+                }
+
+                [JsonProperty]
+                public IWindow? Window { get; set; }
+
+                public bool ShouldSerializeWindow() => Window is not null && (Window.ShouldSerializeID() || Window.ShouldSerializeHandle() || Window.ShouldSerializeX() || Window.ShouldSerializeY() || Window.ShouldSerializeWidth() || Window.ShouldSerializeHeight());
+
+                #endregion
+
+                #region Team
+
+                public class ITeam
+                {
+                    public enum EValue
+                    {
+                        Win,
+                        Lose
+                    }
+
+                    public EValue Value { get; set; }
+
+                    public ITeam(EValue Value)
+                    {
+                        this.Value = Value;
+                    }
+
+                    public bool Leader { get; set; }
+                }
+
+                [JsonProperty]
+                public ITeam? Team { get; set; }
+
+                public bool ShouldSerializeTeam() => Team is not null;
+
+                #endregion
 
                 #region Location
 

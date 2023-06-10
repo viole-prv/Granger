@@ -18,12 +18,10 @@ namespace Granger
         public class IAuto : INotifyPropertyChanged
         {
             public List<IConfig.IStorage.ICluster> Cluster { get; set; }
-            public List<IConfig.IAccount> AccountList { get; set; }
 
-            public IAuto(List<IConfig.IStorage.ICluster> Cluster, List<IConfig.IAccount> AccountList)
+            public IAuto(List<IConfig.IStorage.ICluster> Cluster)
             {
                 this.Cluster = Cluster;
-                this.AccountList = AccountList;
 
                 Init();
             }
@@ -64,19 +62,11 @@ namespace Granger
             {
                 int Year = DateTime.Now.Year;
 
-                var M1 = Cluster
+                foreach (int Month in Cluster
                     .Where(x => x.Value.Date.HasValue)
                     .GroupBy(x => x.Value.Date!.Value.Month)
                     .Select(x => x.Key)
-                    .ToList();
-
-                var M2 = AccountList
-                    .Where(x => x.Setup.Date.Another is not null)
-                    .GroupBy(x => x.Setup.Date.Another!.Item2.Month)
-                    .Select(x => x.Key)
-                    .ToList();
-
-                foreach (int Month in M1.Union(M2))
+                    .ToList())
                 {
                     var Matrix = new int[6, 7];
 
@@ -119,14 +109,6 @@ namespace Granger
                                         .Where(x => x.Value.Date.HasValue)
                                         .Where(x => x.Value.Date!.Value.Month == Month)
                                         .Where(x => x.Value.Date!.Value.Day == Day)
-
-                                        .ToList(),
-
-                                    AccountList
-                                        .Where(x => x.Setup.Date.Another is not null)
-
-                                        .Where(x => x.Setup.Date.Another!.Item2.Month == Month)
-                                        .Where(x => x.Setup.Date.Another!.Item2.Day == Day)
 
                                         .ToList()
                                 ));
@@ -188,16 +170,14 @@ namespace Granger
                     public int Day { get; set; }
 
                     public List<IConfig.IStorage.ICluster> Cluster { get; set; }
-                    public List<IConfig.IAccount> AccountList { get; set; }
 
                     public decimal Price { get; set; }
 
-                    public ICalendar(int Day, List<IConfig.IStorage.ICluster> Cluster, List<IConfig.IAccount> AccountList)
+                    public ICalendar(int Day, List<IConfig.IStorage.ICluster> Cluster)
                     {
                         this.Day = Day;
 
                         this.Cluster = Cluster;
-                        this.AccountList = AccountList;
 
                         Price = Cluster.Where(x => x.Value.Price.HasValue).Sum(x => x.Value.Price!.Value);
                     }
@@ -212,19 +192,6 @@ namespace Granger
                             _ICluster = value;
 
                             NotifyPropertyChanged(nameof(ICluster));
-                        }
-                    }
-
-                    private bool _IAccountList;
-
-                    public bool IAccountList
-                    {
-                        get => _IAccountList;
-                        set
-                        {
-                            _IAccountList = value;
-
-                            NotifyPropertyChanged(nameof(IAccountList));
                         }
                     }
 
@@ -279,11 +246,11 @@ namespace Granger
 
         public readonly IAuto Auto;
 
-        public Calendar(List<IConfig.IStorage.ICluster> Cluster, List<IConfig.IAccount> AccountList)
+        public Calendar(List<IConfig.IStorage.ICluster> Cluster)
         {
             InitializeComponent();
 
-            Auto = new(Cluster, AccountList);
+            Auto = new(Cluster);
 
             DataContext = Auto;
         }
@@ -333,35 +300,6 @@ namespace Granger
             }
         }
 
-        private void AccountList_Click(object sender, MouseButtonEventArgs e)
-        {
-            if (sender is not Grid Grid || Grid.DataContext is not IAuto.IList.ICalendar Calendar) return;
-
-            if (Calendar.AccountList.Count > 0)
-            {
-                Calendar.IAccountList = !Calendar.IAccountList;
-
-                var List = Auto.List!.SelectMany(x => x.Calendar);
-
-                if (List.Any(x => x.IAccountList))
-                {
-                    foreach (var X in List)
-                    {
-                        X.AccountList.ForEach(x => x.Visibility = X.IAccountList);
-                    }
-                }
-                else
-                {
-                    foreach (var X in List)
-                    {
-                        X.AccountList.ForEach(x => x.Visibility = true);
-                    }
-                }
-
-                Program.Auto.Exclude.Sort = Calendar.IAccountList;
-            }
-        }
-
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             var MainWindow = Application.Current.MainWindow;
@@ -372,11 +310,6 @@ namespace Granger
 
         private void MetroWindow_Closing(object sender, CancelEventArgs e)
         {
-            foreach (var X in Auto.AccountList)
-            {
-                X.Visibility = true;
-            }
-
             foreach (var X in Auto.Cluster)
             {
                 X.Visibility = true;
