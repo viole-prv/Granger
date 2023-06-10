@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>Granger</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MahApps.Metro" Version="2.4.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="RestSharp" Version="108.0.3" />
+    <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="WindowsAPICodePack" Version="7.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CSGSI">
+      <HintPath>..\..\..\..\Look\Z\CSGSI.dll</HintPath>
+    </Reference>
+    <Reference Include="Viole Logger Interface">
+      <HintPath>..\..\..\..\Look\Z\Viole\Logger\Viole Logger Interface.dll</HintPath>
+    </Reference>
+    <Reference Include="Viole Pipe">
+      <HintPath>..\..\..\..\Look\Z\Viole\Viole Pipe.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
