@@ -1,4 +1,6 @@
-﻿using MahApps.Metro.Controls;
+﻿using CSGSI;
+using CSGSI.Nodes;
+using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -283,14 +285,22 @@ namespace Granger
                     get => _Selected;
                     set
                     {
-                        if (value)
-                        {
-                            Auto.Config!.Account = null;
-                        }
-
                         _Selected = value;
 
                         NotifyPropertyChanged(nameof(Selected));
+                    }
+                }
+
+                private bool _Keep = true;
+
+                public bool Keep
+                {
+                    get => _Keep;
+                    set
+                    {
+                        _Keep = value;
+
+                        NotifyPropertyChanged(nameof(Keep));
                     }
                 }
 
@@ -526,8 +536,6 @@ namespace Granger
                     Update();
                 }
 
-                public bool Advance { get; set; }
-
                 public enum EReset : byte
                 {
                     Enabled,
@@ -539,28 +547,6 @@ namespace Granger
                     Auto.Config!.Storage.ForEach(x => x.Update());
 
                     Auto.Config!.Update(IConfig.EUpdate.Audit);
-                }
-
-                public void Reset(params EReset[] _)
-                {
-                    if (_.Contains(EReset.Enabled))
-                    {
-                        Enabled = false;
-                    }
-
-                    if (_.Contains(EReset.Selected))
-                    {
-                        Selected = false;
-
-                        if (Auto.Index == 4)
-                        {
-                            Auto.Index = 0;
-                        }
-                    }
-
-                    Seek = null;
-                    Tradable = null;
-                    Locked = null;
                 }
 
                 public event PropertyChangedEventHandler? PropertyChanged;
@@ -581,6 +567,85 @@ namespace Granger
                     _Inventory = value;
 
                     NotifyPropertyChanged(nameof(Inventory));
+                }
+            }
+
+            #endregion
+
+            #region Game State Listener
+
+            public class IGameStateListener : INotifyPropertyChanged
+            {
+                private GameStateListener? _Value;
+
+                public GameStateListener? Value
+                {
+                    get => _Value;
+                    set
+                    {
+                        _Value = value;
+
+                        NotifyPropertyChanged(nameof(Value));
+                    }
+                }
+
+                private string? _Token;
+
+                public string? Token
+                {
+                    get => _Token;
+                    set
+                    {
+                        _Token = value;
+
+                        NotifyPropertyChanged(nameof(Token));
+                    }
+                }
+
+                private bool _Warmup;
+
+                public bool Warmup
+                {
+                    get => _Warmup;
+                    set
+                    {
+                        _Warmup = value;
+
+                        NotifyPropertyChanged(nameof(Warmup));
+                    }
+                }
+
+                private bool _GameOver;
+
+                public bool GameOver
+                {
+                    get => _GameOver;
+                    set
+                    {
+                        _GameOver = value;
+
+                        NotifyPropertyChanged(nameof(GameOver));
+                    }
+                }
+
+                public event PropertyChangedEventHandler? PropertyChanged;
+
+                public void NotifyPropertyChanged(string? propertyName = null)
+                {
+                    PropertyChanged?.Invoke(this, new(propertyName));
+                }
+            }
+
+            private IGameStateListener _GameStateListener = new();
+
+            public IGameStateListener GameStateListener
+            {
+                get => _GameStateListener;
+                set
+                {
+                    _GameStateListener = value;
+
+                    NotifyPropertyChanged(nameof(GameStateListener));
                 }
             }
 
@@ -715,16 +780,14 @@ namespace Granger
             {
                 get => new()
                 {
-                    new(IConfig.EResolution.Large, new(465, 320)),
-                    new(IConfig.EResolution.Tiny, new(380, 255))
+                    new(IConfig.EResolution.N1, new(380, 255, true))
                 };
             }
 
-            public List<IConfig.ESort> Sort
+            public static List<IConfig.ESort> Sort
             {
                 get => Enum.GetValues(typeof(IConfig.ESort))
                     .Cast<IConfig.ESort>()
-                    .Where(x => Sandbox || x == IConfig.ESort.None || x == IConfig.ESort.Launch)
                     .ToList();
             }
 
@@ -1116,13 +1179,6 @@ namespace Granger
                     Auto.PanoramaUI = !Directory.Exists(Path.Combine(Auto.Config!.CSGO!, "csgo", "panorama", "videos"));
                 }
             }
-            else
-            {
-                if (!Auto.Sort.Contains(Auto.Config!.Sort))
-                {
-                    Auto.Config!.Sort = IConfig.ESort.None;
-                }
-            }
 
             Auto.Config!.AccountList ??= new();
 
@@ -1158,8 +1214,6 @@ namespace Granger
                             try
                             {
                                 Auto.Developer.Master.Enabled = false;
-
-                                Auto.Inventory.Enabled = true;
 
                                 var Dictionary = new Dictionary<string, string>
                                 {
@@ -1261,8 +1315,6 @@ namespace Granger
 
                             try
                             {
-                                Auto.Inventory.Enabled = true;
-
                                 foreach (var Pair in Auto.Storage!.Inventory)
                                 {
                                     if (Watcher.Source.IsCancellationRequested) break;
@@ -1387,10 +1439,8 @@ namespace Granger
 
                             try
                             {
-                                Auto.Inventory.Enabled = true;
-
                                 foreach (var Account in Auto.Config!.AccountList
-                                    .Where(x => x.ASF.IsValid)
+                                    .Where(x => x.ShouldSerializeASF())
                                     .ToList())
                                 {
                                     if (Watcher.Source.IsCancellationRequested) break;
@@ -1427,8 +1477,6 @@ namespace Granger
                                                 }
 
                                                 var List = Inventory.Description
-                                                    .Where(x => x.Type == "Base Grade Container")
-                                                    .Where(x => x.Tag is not null && x.Tag.Any(x => x.Category == "ItemSet" || x.Category == "StickerCapsule"))
                                                     .Select(x => (AssetList: Inventory.Asset.Where(v => x.ClassID == v.ClassID &&  x.InstanceID == v.InstanceID), Description: x))
                                                     .ToList();
 
@@ -1753,8 +1801,8 @@ namespace Granger
             {
                 foreach ((string? IP, string? Password, string Watermark, List<IConfig.IPerson.IASF> List) in Auto.Config!.AccountList
                     .Where(x => string.IsNullOrEmpty(Login) || x.Login == Login)
+                    .Where(x => x.ShouldSerializeASF())
                     .Select(x => x.ASF)
-                    .Where(x => x.IsValid)
                     .GroupBy(x => (x.IP, x.Password))
                     .Select(x =>
                     {
@@ -1813,6 +1861,8 @@ namespace Granger
         {
             try
             {
+                StopGameStateListener();
+
                 if (Auto.Config is not null)
                 {
                     foreach (var X in Auto.Config!.AccountList)
@@ -1948,8 +1998,8 @@ namespace Granger
         private static async void Add()
         {
             var Add = new Add(Auto.Config!.AccountList
+                .Where(x => x.ShouldSerializeASF())
                 .Select(x => x.ASF)
-                .Where(x => x.IsValid)
                 .GroupBy(x => (x.IP, x.Password))
                 .Select(x =>
                 {
@@ -2052,16 +2102,21 @@ namespace Granger
 
                 case IConfig.ESort.Launch:
                     Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
-                        Auto.Config.AccountList
-                            .OrderBy(x => x.Setup.Date.Launch)
-                            .Reverse());
+                        Auto.Sandbox
+                            ? Auto.Config.AccountList
+                                .Where(x => x.Setup.Date.Drop.ContainsKey(Auto.Type))
+                                .OrderBy(x =>
+                                {
+                                    if (x.Setup.Date.Drop.TryGetValue(Auto.Type, out var X))
+                                    {
+                                        return X;
+                                    }
 
-                    break;
-
-                case IConfig.ESort.Drop:
-                    Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
-                        Auto.Config.AccountList
-                            .OrderBy(x => x.Setup.Date.Drop));
+                                    return null;
+                                })
+                            : Auto.Config.AccountList
+                                .OrderBy(x => x.Setup.Date.Launch)
+                                .Reverse());
 
                     break;
             }
@@ -2073,170 +2128,136 @@ namespace Granger
 
         #region Location
 
-        private void Location_SelectionChanged(object sender, SelectionChangedEventArgs e) => Location(true);
+        private void Location_SelectionChanged(object sender, SelectionChangedEventArgs e) => Location();
 
-        private static bool Location(bool _ = false)
+        private static void Location()
         {
-            if (Auto.Config == null) return false;
-
-            if (_ || Auto.Location == null || Auto.Location.Count == 0)
+            if (Auto.Config is not null)
             {
                 var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config.Resolution);
 
-                if (Resolution == null)
+                if (Resolution is not null)
                 {
-                    Logger.LogGenericError($"Значение переменной \"{nameof(Resolution)}\" или \"{nameof(Resolution.Dimension)}\" не может быть нулевым");
+                    Logger.LogGenericDebug($"Ширина: {Resolution.Dimension.Width}, Высота: {Resolution.Dimension.Height}.");
 
-                    return false;
-                }
+                    var X = Location(Resolution.Dimension);
 
-                Logger.LogGenericDebug($"Ширина: {Resolution.Dimension.Width}, Высота: {Resolution.Dimension.Height}.");
-
-                (string? Value, List<IConfig.IAccount.IBin.ILocation>? List, int H, int V) = GetLocationList(Resolution.Dimension);
-
-                if (List == null)
-                {
-                    Logger.LogGenericError(string.IsNullOrEmpty(Value) ? "Произошла неизвестная ошибка!" : Value);
-
-                    return false;
+                    if (X is not null)
+                    {
+                        Auto.Location = X;
+                    }
                 }
                 else
                 {
-                    Logger.LogGenericDebug($"Было сгенерировано всего {List.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
-
-                    Auto.Location = List;
-
-                    return true;
+                    Logger.LogGenericError($"Значение переменной \"{nameof(Resolution)}\" или \"{nameof(Resolution.Dimension)}\" не может быть нулевым");
                 }
             }
-
-            return true;
         }
 
-        public class ILocation
+        public static List<IConfig.IAccount.IBin.ILocation>? Location(IConfig.IResolution.IDimension Dimension)
         {
-            public byte TaskBar { get; set; } = 40;
-
-            public class IIndent
-            {
-                public byte Width { get; set; } = 10;
-                public byte Height { get; set; } = 25;
-            }
-
-            public IIndent Indent { get; set; } = new();
-        }
-
-        public static (string? Value, List<IConfig.IAccount.IBin.ILocation>? List, int H, int V) GetLocationList(IConfig.IResolution.IDimension Dimension)
-        {
-            var Location = new ILocation();
-
-            switch (Auto.Config!.Resolution)
-            {
-                case IConfig.EResolution.Tiny:
-                    Location.TaskBar = 0;
-                    Location.Indent = new()
-                    {
-                        Width = 0,
-                        Height = 0,
-                    };
-
-                    break;
-            }
-
             var List = new List<IConfig.IAccount.IBin.ILocation>();
 
             try
             {
-                int _Width = (int)SystemParameters.WorkArea.Width;
-                int _Height = (int)SystemParameters.WorkArea.Height;
+                int Width = (int)SystemParameters.WorkArea.Width;
+                int Height = (int)SystemParameters.WorkArea.Height;
 
-                int Horizontal = Math.Abs(_Width / (Dimension.Width + Location.Indent.Width)); // Отступ от окна.
-                int Vertical = Math.Abs(_Height / (Dimension.Height + Location.Indent.Height)); // Отступ от окна.
+                int D_Width = Dimension.Width;
+                int D_Height = Dimension.Height;
 
-                int _ = Horizontal * Vertical;
-
-                int[] Width = new int[_];
-
-                if (Width.Length == 0)
+                if (Dimension.Border)
                 {
-                    return ($"Значение переменной \"{nameof(Width)}\" не может быть нулевым", null, 0, 0);
+                    D_Height += 25;
                 }
 
-                Width[0] = Location.Indent.Width; // Отступ.
+                int H = Math.Abs(Width / D_Width);
+                int V = Math.Abs(Height / D_Height);
 
-                int[] Height = new int[_];
+                int _ = H * V;
 
-                if (Height.Length == 0)
+                if (_ > 0)
                 {
-                    return ($"Значение переменной \"{nameof(Height)}\" не может быть нулевым", null, 0, 0);
-                }
+                    #region Width
 
-                Height[0] = 0; // Отступ.
+                    int T_Width = 0;
 
-                int TemporaryWidth = 0;
+                    int[] A_Width = new int[_];
 
-                for (int i = 1; i < Width.Length; i++)
-                {
-                    TemporaryWidth++;
-
-                    int R = (Dimension.Width * TemporaryWidth) + (Location.Indent.Width * TemporaryWidth);
-
-                    if (R > _Width - Dimension.Width)
+                    for (int i = 1; i < A_Width.Length; i++)
                     {
-                        R = Location.Indent.Width;
+                        T_Width++;
 
-                        TemporaryWidth = 0;
-                    }
+                        int X = (D_Width * T_Width) + T_Width;
 
-                    Width[i] = R > Location.Indent.Width
-                        ? R + Location.Indent.Width
-                        : R;
-                }
-
-                int TemporaryHeight = 0;
-
-                for (int i = 1; i < Height.Length; i++)
-                {
-                    if ((i % Horizontal) == 0 || i == 0)
-                    {
-                        TemporaryHeight++;
-
-                        int R = (Dimension.Height * TemporaryHeight) + (Location.Indent.Height * TemporaryHeight);
-
-                        if (R > _Height - Dimension.Height)
+                        if (X > Width - D_Width)
                         {
-                            break;
+                            T_Width = 0;
+
+                            A_Width[i] = 0;
                         }
-
-                        Height[i] = R;
-                    }
-                    else
-                    {
-                        Height[i] = Height[i - 1];
-                    }
-                }
-
-                for (int i = 0; i < _; i++)
-                {
-                    List.Add(new IConfig.IAccount.IBin.ILocation
-                    {
-                        Index = i,
-                        Cordiant = new()
+                        else
                         {
-                            X = Width[i],
-                            Y = Height[i]
+                            A_Width[i] = X;
                         }
-                    });
-                }
+                    }
 
-                return (null, List, Horizontal, Vertical);
+                    #endregion
+
+                    #region Height
+
+                    int T_Height = 0;
+
+                    int[] A_Height = new int[_];
+
+                    for (int i = 1; i < A_Height.Length; i++)
+                    {
+                        if ((i % H) == 0 || i == 0)
+                        {
+                            T_Height++;
+
+                            int X = (D_Height * T_Height) + T_Height;
+
+                            if (X > Height - D_Height) break;
+
+                            A_Height[i] = X;
+                        }
+                        else
+                        {
+                            A_Height[i] = A_Height[i - 1];
+                        }
+                    }
+
+                    #endregion
+
+                    for (int i = 0; i < _; i++)
+                    {
+                        List.Add(new IConfig.IAccount.IBin.ILocation
+                        {
+                            Index = i,
+                            Cordiant = new()
+                            {
+                                X = A_Width[i],
+                                Y = A_Height[i]
+                            }
+                        });
+                    }
+
+                    Logger.LogGenericDebug($"Было сгенерировано всего {List.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
+
+                    return List;
+                }
+                else
+                {
+                    Logger.LogGenericWarning("Произошла ошибка при расчете.");
+                }
             }
             catch (Exception e)
             {
                 Logger.LogGenericException(e);
-
-                return (e.Message, null, 0, 0);
             }
+
+            return null;
         }
 
         #endregion
@@ -2509,7 +2530,7 @@ namespace Granger
             {
                 var List = Auto.Config!.Audit.ToDictionary(x => x.Name, x => Tuple.Create
                 (
-                    (Auto.Fee ? x.Receive : x.Pay).ToString("C", Auto.Config!.Steam.Culture),
+                    (Auto.Fee ? x.Receive : x.Price).ToString("C", Auto.Config!.Steam.Culture),
                     Auto.More
                         ? $"{x.Percent}%"
                         : x.Count.ToString()
@@ -2525,12 +2546,11 @@ namespace Granger
                     x.Value.Item2.PadRight(Item2))
                 );
 
-                _ += "\n\r";
-                _ += $"\nСтатистика: {Auto.Config!.Together.Item1} ({Auto.Config!.Together.Item2})";
-
-                if (Auto.Developer.Master is not null && !Auto.Developer.Master.Selected)
+                if (Auto.Config!.Revise is not null)
                 {
-                    _ += $" ≈ {Auto.Config!.Average}";
+                    _ += "\n\r";
+                    _ += $"\nСтатистика: {Auto.Config!.Revise.Item1} ({Auto.Config!.Revise.Item2})";
+                    _ += $" ≈ {Auto.Config!.Revise.Item3}";
                 }
 
                 Clipboard.SetText(_);
@@ -2854,7 +2874,7 @@ namespace Granger
 
         private static async Task ASF(IConfig.IAccount Account)
         {
-            if (Account.ASF.IsValid)
+            if (Account.ShouldSerializeASF())
             {
                 Account.ASF.Bot = await Account.Bot();
 
@@ -2896,6 +2916,361 @@ namespace Granger
             await Task.Delay(Delay);
             Account.Exclude.Remove(Exclude);
         }
+
+        #endregion
+
+        #region Game State Listener
+
+        private static void InitGameStateListener(IConfig.IAccount Account, bool X)
+        {
+            try
+            {
+                string _ = Path.Combine(Auto.Config!.GetProperCSGODirectory(Account.Setup.AccountID), "gamestate_integration_granger.cfg");
+
+                if (X)
+                {
+                    string[] N =
+                    {
+                        "\"CSGSI\"",
+                        "{",
+                        $"   \"uri\" \"http://localhost:{Auto.Config!.GameStateListener}\"",
+                        "   \"timeout\" \"5.0\"",
+                        "   \"auth\"",
+                        "   {",
+                        $"      \"token\"                 \"{Account.Login.ToUpper()}\"",
+                        "   }",
+                        "   \"data\"",
+                        "   {",
+                        "       \"provider\"                    \"1\"",
+                        "       \"map\"                         \"1\"",
+                        "       \"round\"                       \"1\"",
+                        "       \"player_id\"                   \"1\"",
+                        "       \"player_weapons\"              \"1\"",
+                        "       \"player_match_stats\"          \"1\"",
+                        "       \"player_state\"                \"1\"",
+                        "       \"allplayers_id\"               \"1\"",
+                        "       \"allplayers_state\"            \"1\"",
+                        "       \"allplayers_match_stats\"      \"1\"",
+                        "   }",
+                        "}"
+                    };
+
+                    using var Writer = new StreamWriter(_);
+
+                    foreach (string Value in N)
+                    {
+                        Writer.WriteLine(Value);
+                    }
+                }
+                else
+                {
+                    if (File.Exists(_))
+                    {
+                        File.Delete(_);
+                    }
+                }
+
+                Auto.Config.Save();
+            }
+            catch (Exception e)
+            {
+                Logger.LogGenericException(e);
+            }
+        }
+
+        private bool StartGameStateListener()
+        {
+            try
+            {
+                Auto.GameStateListener.Value = new GameStateListener(Auto.Config!.GameStateListener)
+                {
+                    EnableRaisingIntricateEvents = true
+                };
+
+                Auto.GameStateListener.Value.NewGameState += OnNewGameState;
+
+                if (Auto.GameStateListener.Value.Start())
+                {
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogGenericException(e);
+            }
+
+            return true;
+        }
+
+        private void StopGameStateListener()
+        {
+            try
+            {
+                if (Auto.GameStateListener.Value is not null)
+                {
+                    if (Auto.GameStateListener.Value.Running)
+                    {
+                        Auto.GameStateListener.Value.NewGameState -= OnNewGameState;
+                        Auto.GameStateListener.Value.Stop();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogGenericException(e);
+            }
+        }
+
+        private void OnNewGameState(GameState GameState)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(GameState.Map.Name) || string.IsNullOrEmpty(Auto.GameStateListener.Token)) return;
+
+                if (GameState.Auth.Token == Auto.GameStateListener.Token)
+                {
+                    Logger.LogTrace(new
+                    {
+                        Current = new
+                        {
+                            GameState.Round,
+                            GameState.Map
+                        },
+                        Previously = new
+                        {
+                            GameState.Previously.Round,
+                            GameState.Previously.Map
+                        }
+                    });
+
+                    switch (GameState.Map.Phase)
+                    {
+                        case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
+                            Logger.LogGenericDebug("Warmup!");
+
+                            Auto.GameStateListener.Warmup = true;
+                            Auto.GameStateListener.GameOver = false;
+
+                            if (Auto.Config!.AccountList.Any(x => x.Bin.Inventory == null))
+                            {
+                                Auto.Inventory.Keep = false;
+                            }
+
+                            return;
+
+                        case MapPhase.GameOver when !Auto.GameStateListener.GameOver:
+                            Logger.LogGenericDebug("Game Over!");
+
+                            Auto.GameStateListener.GameOver = true;
+                            Auto.GameStateListener.Warmup = false;
+
+                            Auto.Inventory.Keep = false;
+
+                            return;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogGenericException(e);
+            }
+        }
+
+        #region Lobby
+
+        private async void Lobby_Click(object sender, RoutedEventArgs e) => await Lobby();
+
+        private async Task Lobby()
+        {
+            if (Auto.GameStateListener.Value == null && StartGameStateListener())
+            {
+                Logger.LogGenericWarning("Не удалось запустить GSI, закройте другую копию программы (Посмотрите в диспетчере задач, вкладка: \"подробнее\") и перезапустите программу.");
+
+                return;
+            }
+
+            var AccountList = Auto.Config!.AccountList
+                .Where(x => x.Bin.Launched)
+                .OrderBy(x => x.Bin.Location!.Index)
+                .ToList();
+
+            if (AccountList.Count == 0)
+            {
+                Logger.LogGenericWarning("Не удалось запустить сборку лобби!");
+
+                return;
+            }
+
+            Clipboard.Clear();
+
+            foreach (var Account in AccountList)
+            {
+                if (Account.GetWindow())
+                {
+                    Account.SetForeground();
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        SendKey(Account.Bin.Window!.Handle, ConsoleKey.Escape);
+                    }
+                }
+            }
+
+            await Task.Delay(1000);
+
+            var T = AccountList
+                .Take(5)
+                .Select((x, i) => (Account: x, Index: i))
+                .ToList();
+
+            foreach (var Account in T
+                .Select(x => x.Account)
+                .Where(x => string.IsNullOrEmpty(x.Setup.LobbyCode))
+                .ToList())
+            {
+                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
+                {
+                    await SetCursorPosition(Account,
+                        Account.Bin.Window!.Width.Value - 10,
+                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
+
+                    await SetCursorPosition(Account,
+                        Account.Bin.Window!.Width.Value - 75,
+                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
+
+                    await Task.Delay(1000);
+
+                    while (string.IsNullOrEmpty(Account.Setup.LobbyCode))
+                    {
+                        await SetCursorPosition(Account,
+                            Account.Bin.Window!.Width.Value - 175,
+                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Code
+
+                        await Task.Delay(5000);
+
+                        string LobbyCode = Clipboard.GetText();
+
+                        if (string.IsNullOrEmpty(LobbyCode)) continue;
+
+                        if (Regex.IsMatch(LobbyCode, "[a-zA-Z0-9]+-[a-zA-Z0-9]+"))
+                        {
+                            if (AccountList.Any(x => x.Setup.LobbyCode == LobbyCode)) continue;
+
+                            Account.Setup.LobbyCode = LobbyCode;
+
+                            Auto.Config.Save();
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 150,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Close
+                        }
+                    }
+                }
+
+                await Task.Delay(1000);
+            }
+
+            foreach ((IConfig.IAccount Account, int Index) in T)
+            {
+                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
+                {
+                    if (Index == 0)
+                    {
+                        Auto.GameStateListener.Token = Account.Login.ToUpper();
+
+                        Helper.SwitchInputMethod(Account.Bin.Window.Handle);
+
+                        foreach (string? LobbyCode in T
+                            .Where(x => x.Index > 0)
+                            .Select(x => x.Account.Setup.LobbyCode)
+                            .ToList())
+                        {
+                            if (string.IsNullOrEmpty(LobbyCode)) continue;
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 10,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 75,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
+
+                            await Task.Delay(1000);
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 200,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Input
+
+                            await Task.Delay(500);
+
+                            foreach (char _ in LobbyCode.ToCharArray())
+                            {
+                                byte? Byte = Helper.ToHexChar(_);
+
+                                if (Byte == null) continue;
+
+                                Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
+                            }
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 200,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Profile
+
+                            await Task.Delay(500);
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 80,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 140)); // Lobby Invite
+
+                            await SetCursorPosition(Account,
+                                Account.Bin.Window!.Width.Value - 150,
+                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 180)); // Lobby Close
+
+                            await Task.Delay(1000);
+                        }
+                    }
+                    else
+                    {
+                        await SetCursorPosition(Account,
+                            Account.Bin.Window!.Width.Value - 10,
+                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 95)); // Lobby Accept
+                    }
+                }
+
+                await Task.Delay(2500);
+            }
+        }
+
+        private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
+        {
+            if (Account.Bin.Window!.X.HasValue && Account.Bin.Window!.Y.HasValue)
+            {
+                int X = Width + Account.Bin.Window!.X.Value;
+                int Y = Height + Account.Bin.Window!.Y.Value;
+
+                Account.SetForeground();
+
+                await Task.Delay(250);
+
+                Helper.SetCursorPosition(X, Y);
+
+                await Task.Delay(Hover ? 1000 : 500);
+
+                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            }
+        }
+
+        private static void SendKey(IntPtr hWnd, ConsoleKey KeyCode)
+        {
+            uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
+            uint _ = 1 | MapVirtualKey << 16;
+
+            Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+            Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+        }
+
+        #endregion
 
         #endregion
 
@@ -3113,51 +3488,54 @@ namespace Granger
 
                 if (Keyboard.IsKeyDown(Key.LeftCtrl))
                 {
-                    if (Auto.Config!.Sort == IConfig.ESort.Drop)
+                    if (Auto.Sandbox && Auto.Config!.Sort == IConfig.ESort.Launch)
                     {
-                        var Date = new Date
+                        if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
                         {
-                            Owner = this
-                        };
+                            var Date = new Date
+                            {
+                                Owner = this
+                            };
 
-                        if (Date.ShowDialog() ?? false)
-                        {
-                            if (Date.Auto.Value == Date.IAuto.EDate.Now)
+                            if (Date.ShowDialog() ?? false)
                             {
-                                Account.Setup.Date.Drop = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
-                                    ? Account.Bin.Position.Value
-                                    : DateTime.Now;
-                            }
-                            else if (Date.Auto.Value == Date.IAuto.EDate.Reset)
-                            {
-                                Account.Setup.Date.Drop = null;
-                            }
-                            else
-                            {
-                                if (Account.Setup.Date.Drop.HasValue)
+                                if (Date.Auto.Value == Date.IAuto.EDate.Now)
                                 {
-                                    if (Date.Auto.Value == Date.IAuto.EDate.Hour)
-                                    {
-                                        Account.Setup.Date.Drop = Account.Setup.Date.Drop.Value.AddHours(Date.Auto.Range);
-                                    }
-                                    else if (Date.Auto.Value == Date.IAuto.EDate.Day)
-                                    {
-                                        Account.Setup.Date.Drop = Account.Setup.Date.Drop.Value.AddDays(Date.Auto.Range);
-                                    }
+                                    Account.Setup.Date.Drop[Auto.Type] = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
+                                        ? Account.Bin.Position.Value
+                                        : DateTime.Now;
+                                }
+                                else if (Date.Auto.Value == Date.IAuto.EDate.Reset)
+                                {
+                                    Account.Setup.Date.Drop[Auto.Type] = null;
                                 }
                                 else
                                 {
-                                    Account.Setup.Date.Drop = DateTime.Now;
+                                    if (Account.Setup.Date.Drop.TryGetValue(Auto.Type, out var X) && X.HasValue)
+                                    {
+                                        if (Date.Auto.Value == Date.IAuto.EDate.Hour)
+                                        {
+                                            Account.Setup.Date.Drop[Auto.Type] = X.Value.AddHours(Date.Auto.Range);
+                                        }
+                                        else if (Date.Auto.Value == Date.IAuto.EDate.Day)
+                                        {
+                                            Account.Setup.Date.Drop[Auto.Type] = X.Value.AddDays(Date.Auto.Range);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Account.Setup.Date.Drop[Auto.Type] = DateTime.Now;
+                                    }
                                 }
-                            }
 
-                            Sort();
+                                Sort();
+                            }
                         }
                     }
                 }
                 else
                 {
-                    if (!Auto.Sandbox || (Account.Setup.Configured.HasValue && Account.Setup.Configured.Value))
+                    if (Auto.Type == IAuto.EType.Steam || (Account.Setup.Configured.HasValue && Account.Setup.Configured.Value))
                     {
                         if (Account.Bin.Condition > 0 && Account.Bin.Condition < 3)
                         {
@@ -3253,185 +3631,6 @@ namespace Granger
 
             return;
         }
-
-
-        #region Lobby
-
-        private async void Lobby_Click(object sender, RoutedEventArgs e) => await Lobby();
-
-        private static async Task Lobby()
-        {
-            Clipboard.Clear();
-
-            var AccountList = Auto.Config!.AccountList
-                .Where(x => x.Bin.Launched)
-                .OrderBy(x => x.Bin.Location!.Index)
-                .ToList();
-
-            foreach (var Account in AccountList)
-            {
-                if (Account.GetWindow())
-                {
-                    Account.SetForeground();
-
-                    for (int i = 0; i < 2; i++)
-                    {
-                        SendKey(Account.Bin.Window!.Handle, ConsoleKey.Escape);
-                    }
-                }
-            }
-
-            var T = AccountList
-                .Take(5)
-                .Select((x, i) => (Account: x, Index: i))
-                .ToList();
-
-            foreach (var Account in T
-                .Select(x => x.Account)
-                .Where(x => string.IsNullOrEmpty(x.Setup.LobbyCode))
-                .ToList())
-            {
-                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
-                {
-                    await SetCursorPosition(Account,
-                        Account.Bin.Window!.Width.Value - 10,
-                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
-
-                    await SetCursorPosition(Account,
-                        Account.Bin.Window!.Width.Value - 75,
-                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
-
-                    await Task.Delay(1000);
-
-                    while (string.IsNullOrEmpty(Account.Setup.LobbyCode))
-                    {
-                        await SetCursorPosition(Account,
-                            Account.Bin.Window!.Width.Value - 175,
-                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Code
-
-                        await Task.Delay(5000);
-
-                        string LobbyCode = Clipboard.GetText();
-
-                        if (string.IsNullOrEmpty(LobbyCode)) continue;
-
-                        if (Regex.IsMatch(LobbyCode, "[a-zA-Z0-9]+-[a-zA-Z0-9]+"))
-                        {
-                            if (AccountList.Any(x => x.Setup.LobbyCode == LobbyCode)) continue;
-
-                            Account.Setup.LobbyCode = LobbyCode;
-
-                            Auto.Config.Save();
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 150,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Close
-                        }
-                    }
-                }
-
-                await Task.Delay(1000);
-            }
-
-            foreach ((IConfig.IAccount Account, int Index) in T)
-            {
-                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
-                {
-                    if (Index == 0)
-                    {
-                        Helper.SwitchInputMethod(Account.Bin.Window.Handle);
-
-                        foreach (string? LobbyCode in T
-                            .Where(x => x.Index > 0)
-                            .Select(x => x.Account.Setup.LobbyCode)
-                            .ToList())
-                        {
-                            if (string.IsNullOrEmpty(LobbyCode)) continue;
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 10,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 75,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
-
-                            await Task.Delay(1000);
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 200,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Input
-
-                            await Task.Delay(500);
-
-                            foreach (char _ in LobbyCode.ToCharArray())
-                            {
-                                byte? Byte = Helper.ToHexChar(_);
-
-                                if (Byte == null) continue;
-
-                                Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
-                            }
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 200,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Profile
-
-                            await Task.Delay(500);
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 80,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 140)); // Lobby Invite
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 150,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 180)); // Lobby Close
-
-                            await Task.Delay(1000);
-                        }
-                    }
-                    else
-                    {
-                        await SetCursorPosition(Account,
-                            Account.Bin.Window!.Width.Value - 10,
-                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 95)); // Lobby Accept
-                    }
-                }
-
-                await Task.Delay(2500);
-            }
-        }
-
-        private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
-        {
-            if (Account.Bin.Window!.X.HasValue && Account.Bin.Window!.Y.HasValue)
-            {
-                int X = Width + Account.Bin.Window!.X.Value;
-                int Y = Height + Account.Bin.Window!.Y.Value;
-
-                Account.SetForeground();
-
-                await Task.Delay(250);
-
-                Helper.SetCursorPosition(X, Y);
-
-                await Task.Delay(Hover ? 1000 : 500);
-
-                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-            }
-        }
-
-        private static void SendKey(IntPtr hWnd, ConsoleKey KeyCode)
-        {
-            uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
-            uint _ = 1 | MapVirtualKey << 16;
-
-            Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
-            Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
-        }
-
-        #endregion
 
         #region Setup
 
@@ -3756,6 +3955,8 @@ namespace Granger
                     Account.Setup.PersonaName = LoginUser.AccountName;
                     Account.Setup.RememberPassword = LoginUser.RememberPassword;
 
+                    InitGameStateListener(Account, true);
+
                     Auto.Config.Save();
 
                     return ("Аккаунт был успешно настроен!", true);
@@ -3891,6 +4092,9 @@ namespace Granger
 
                     Account.Setup.Configured = ConfigureCheck(Account.Setup);
 
+
+                    InitGameStateListener(Account, false);
+
                     Auto.Config.Save();
 
                     return ("Аккаунт был успешно сброшен!", true);
@@ -3956,8 +4160,6 @@ namespace Granger
                         }
                         else
                         {
-                            if (!Location()) return false;
-
                             if (Auto.Type == IAuto.EType.CSGO)
                             {
                                 if (!Auto.PanoramaUI)
@@ -3973,7 +4175,7 @@ namespace Granger
                                 {
                                     var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config!.Resolution);
 
-                                    const byte VIDEO_MODE_LINE = 54;
+                                    const byte VIDEO_MODE_LINE = 52;
 
                                     if (Resolution == null || !await SetVideoMode(CONFIG, VIDEO_MODE_LINE, Resolution.Dimension)) return false;
                                 }
@@ -4062,7 +4264,7 @@ namespace Granger
                                 Account.Update();
                             }
 
-                            if (Account.ASF.IsValid)
+                            if (Account.ShouldSerializeASF())
                             {
                                 var Watcher = WatcherStart();
 
@@ -4251,7 +4453,7 @@ namespace Granger
 
                 Account.Exclude.Add(IConfig.IAccount.IExclude.EValue.Close);
 
-                if (Account.ASF.IsValid)
+                if (Account.ShouldSerializeASF())
                 {
                     var Watcher = WatcherClose();
 
@@ -4499,81 +4701,46 @@ namespace Granger
 
                     try
                     {
-                        const byte N = 60;
-
                         while (true)
                         {
                             if (Watcher.Source.IsCancellationRequested) break;
 
-                            try
+                            var AccountList = Auto.Config!.AccountList
+                                .Where(x => x.ShouldSerializeASF())
+                                .Where(x => x.Bin.ShouldSerializeCondition())
+                                .ToList();
+
+                            Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                            if (AccountList.Count > 0)
                             {
-                                var AccountList = Auto.Config!.AccountList
-                                    .Where(x => x.ASF.IsValid && x.Bin.Launched)
-                                    .OrderBy(x => x.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU)
-                                    .ToList();
+                                Logger.LogGenericDebug("Проверка запущена.");
 
-                                if (AccountList.Count > 0)
-                                {
-                                    Logger.LogGenericDebug("Проверка запущена.");
+                                await UpdateInventory(Watcher, AccountList);
 
-                                    await SetInventory(Watcher, AccountList);
+                                Logger.LogGenericDebug("Проверка завершена.");
+                            }
 
-                                    Logger.LogGenericDebug("Проверка завершена.");
-                                }
-
-                                Auto.Inventory.Advance = false;
-
-                                if (AccountList.Count == 0) break;
-
-                                for (uint i = N; i <= Auto.Config!.Inventory.Check * 30; i += N)
+                            if (Auto.Type == IAuto.EType.CSGO)
+                            {
+                                while (Auto.Inventory.Keep)
                                 {
                                     if (Watcher.Source.IsCancellationRequested) break;
 
-                                    try
-                                    {
-                                        if (Auto.Inventory.Advance) break;
-
-                                        await Task.Delay(TimeSpan.FromSeconds(N), Watcher.Source.Token);
-                                    }
-                                    catch (OperationCanceledException)
-                                    {
-                                        if (Auto.Developer.Debug)
-                                        {
-                                            Logger.LogGenericDebug("Задача успешно отменена!");
-                                        }
-
-                                        break;
-                                    }
-                                    catch (ObjectDisposedException) { break; }
-                                    catch (Exception e)
-                                    {
-                                        Logger.LogGenericException(e);
-                                    }
+                                    await Task.Delay(5 * 1000, Watcher.Source.Token);
                                 }
+
+                                Auto.Inventory.Keep = true;
                             }
-                            catch (OperationCanceledException)
+                            else if (Auto.Type == IAuto.EType.TF2)
                             {
-                                if (Auto.Developer.Debug)
+                                for (int i = 0; i < 10; i++)
                                 {
-                                    Logger.LogGenericDebug("Задача успешно отменена!");
+                                    if (Watcher.Source.IsCancellationRequested) break;
+
+                                    await Task.Delay(30 * 1000, Watcher.Source.Token);
                                 }
-
-                                break;
                             }
-                            catch (ObjectDisposedException) { break; }
-                            catch (Exception e)
-                            {
-                                Logger.LogGenericException(e);
-                            }
-                        }
-
-                        if (Auto.Config!.Storage.Count == 0)
-                        {
-                            Auto.Inventory.Reset(IAuto.IInventory.EReset.Enabled, IAuto.IInventory.EReset.Selected);
-                        }
-                        else
-                        {
-                            Auto.Inventory.Reset(IAuto.IInventory.EReset.Enabled);
                         }
                     }
                     catch (OperationCanceledException)
@@ -4592,11 +4759,11 @@ namespace Granger
                     {
                         Watcher.Remove();
                     }
+
+                    Auto.Inventory.Enabled = false;
                 }
                 else
                 {
-                    Auto.Inventory.Reset(IAuto.IInventory.EReset.Enabled, IAuto.IInventory.EReset.Selected);
-
                     Auto.Watcher.Where(x => x.Type == IAuto.IWatcher.EType.Inventory)
                         .ToList()
                         .ForEach(x => x.Dispose());
@@ -4608,7 +4775,7 @@ namespace Granger
             }
         }
 
-        private static async Task SetInventory(IAuto.IWatcher Watcher, List<IConfig.IAccount> AccountList)
+        private static async Task UpdateInventory(IAuto.IWatcher Watcher, List<IConfig.IAccount> AccountList)
         {
             try
             {
@@ -4626,26 +4793,35 @@ namespace Granger
                     {
                         if (Watcher.Source.IsCancellationRequested) break;
 
-                        var Inventory = await GetInventory(Watcher, Account);
+                        var Inventory = await UpdateInventory(Watcher, Account);
 
                         if (Inventory == null || Inventory.Count == 0) continue;
 
-                        Cluster.Add($"<code>{Account.Tag()} | {string.Join(", ", Inventory.Select(x => $"{x.Description.MarketName}{(x.Asset.Price.HasValue ? $" ({x.Asset.Price.Value.ToString("C", Auto.Config!.Steam.Culture)})" : "")}"))}{(Account.Setup.Date.Since.HasValue ? $" | {Account.Setup.Date.Since.Value:hh':'mm':'ss}" : "")}{(Auto.Config!.Inventory.Max > 1 ? $" - {Account.Bin.Inventory?.New}/{Auto.Config!.Inventory.Max}" : "")}</code>");
+                        await SendMessage($"<code>{Account.Tag()} | {string.Join(", ", Inventory.Select(x => $"{x.Description.MarketName}{(x.Asset.Price.HasValue ? $" ({x.Asset.Price.Value.ToString("C", Auto.Config!.Steam.Culture)})" : "")}"))}{(Account.Setup.Date.Since.HasValue ? $" | {Account.Setup.Date.Since.Value:hh':'mm':'ss}" : "")}</code>");
                     }
 
-                    Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                    if (Cluster.Count > 0)
+                    if (Auto.Type == IAuto.EType.TF2)
                     {
-                        var Predicate = Auto.Config!.AccountList
+                        Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                        var Close = AccountList
                             .Where(x => x.Bin.Inventory is not null)
+                            .Where(x => x.Bin.Inventory!.New > 0)
                             .ToList();
 
-                        var N = Predicate.Where(x => x.Bin.Launched);
+                        if (Close.Count > 0)
+                        {
+                            Logger.LogGenericInfo($"Закрываю {Close.Count} {Lang.Declination(new string[] { "аккаунт", "аккаунта", "аккаунтов" }, Close.Count)}.");
 
-                        Cluster.Add($"\n<code>{N.Count() - N.Count(x => x.Bin.Inventory!.New >= Auto.Config!.Inventory.Max)} / {Predicate.Count}</code>");
+                            Watcher.Source.Token.ThrowIfCancellationRequested();
 
-                        await SendMessage(string.Join("\n", Cluster));
+                            foreach (var X in Close)
+                            {
+                                if (Watcher.Source.IsCancellationRequested) break;
+
+                                await CloseAccount(X);
+                            }
+                        }
                     }
                 }
             }
@@ -4663,7 +4839,7 @@ namespace Granger
             }
         }
 
-        private static async Task<List<(Steam.IAsset Asset, Steam.IDescription Description)>?> GetInventory(IAuto.IWatcher Watcher, IConfig.IAccount Account)
+        private static async Task<List<(Steam.IAsset Asset, Steam.IDescription Description)>?> UpdateInventory(IAuto.IWatcher Watcher, IConfig.IAccount Account)
         {
             try
             {
@@ -4731,13 +4907,16 @@ namespace Granger
                                         Account.Bin.Inventory.New += List.Count;
                                         Account.Bin.Inventory.Count = Inventory.Count;
 
-                                        Account.Setup.Date.Drop = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
-                                            ? Account.Bin.Position.Value
-                                            : DateTime.Now;
+                                        if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
+                                        {
+                                            Account.Setup.Date.Drop[Auto.Type] = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
+                                                ? Account.Bin.Position.Value
+                                                : DateTime.Now;
+                                        }
 
                                         Account.Update();
 
-                                        if (Auto.Config!.Sort == IConfig.ESort.Drop)
+                                        if (Auto.Config!.Sort == IConfig.ESort.Launch)
                                         {
                                             Sort();
                                         }
@@ -4810,33 +4989,27 @@ namespace Granger
 
                                         Watcher.Source.Token.ThrowIfCancellationRequested();
 
-                                        if (Auto.Config!.Inventory.Price > 0m)
+                                        var Receive = List
+                                            .Select(x => x.Asset)
+                                            .ToList();
+
+                                        if (Receive.Count > 0)
                                         {
-                                            var Receive = List
-                                                .Select(x => x.Asset)
-                                                .Where(x =>
-                                                    x.Price.HasValue &&
-                                                    x.Price >= Auto.Config!.Inventory.Price)
-                                                .ToList();
+                                            Watcher.Source.Token.ThrowIfCancellationRequested();
 
-                                            if (Receive.Count > 0)
+                                            var (Value, Success) = await Trade(Watcher, Account, Receive, false);
+
+                                            Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                                            if (!string.IsNullOrEmpty(Value))
                                             {
-                                                Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                                                var (Value, Success) = await Trade(Watcher, Account, Receive, false);
-
-                                                Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                                                if (!string.IsNullOrEmpty(Value))
+                                                if (Success)
                                                 {
-                                                    if (Success)
-                                                    {
-                                                        Account.Logger.LogGenericInfo(Value);
-                                                    }
-                                                    else
-                                                    {
-                                                        Account.Logger.LogGenericWarning(Value);
-                                                    }
+                                                    Account.Logger.LogGenericInfo(Value);
+                                                }
+                                                else
+                                                {
+                                                    Account.Logger.LogGenericWarning(Value);
                                                 }
                                             }
                                         }

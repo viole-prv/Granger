@@ -41,8 +41,8 @@ namespace Granger
             public string? Icon { get; set; }
 
             [JsonProperty("tradable")]
-            public byte Tradable { get; set; }   
-            
+            public byte Tradable { get; set; }
+
             public class IOwner
             {
                 [JsonProperty("value")]
@@ -52,23 +52,11 @@ namespace Granger
             [JsonProperty("owner_descriptions")]
             public List<IOwner>? Owner { get; set; }
 
-            [JsonProperty("type")]
-            public string? Type { get; set; }
-
             [JsonProperty("market_name")]
             public string? MarketName { get; set; }
 
             [JsonProperty("market_hash_name")]
-            public string? MarketHashName { get; set; }      
-            
-            public class ITag
-            {
-                [JsonProperty("category")]
-                public string? Category { get; set; }
-            }
-
-            [JsonProperty("tags")]
-            public List<ITag>? Tag { get; set; }       
+            public string? MarketHashName { get; set; }
         }
 
         public class IRender
@@ -80,7 +68,7 @@ namespace Granger
             {
                 [JsonProperty("sell_price_text", Required = Required.DisallowNull)]
                 public string? Price { get; set; }
-                
+
                 [JsonProperty("asset_description", Required = Required.DisallowNull)]
                 public IDescription? Description { get; set; }
             }

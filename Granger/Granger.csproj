@@ -18,6 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="CSGSI">
+      <HintPath>..\..\..\..\Look\Z\CSGSI.dll</HintPath>
+    </Reference>
     <Reference Include="Viole Logger Interface">
       <HintPath>..\..\..\..\Look\Z\Viole\Logger\Viole Logger Interface.dll</HintPath>
     </Reference>

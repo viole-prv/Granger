@@ -123,17 +123,17 @@
                             <DataTrigger Binding="{Binding Progress.Master}" Value="True">
                                 <Setter Property="IsEnabled" Value="False" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Developer.Master.Enabled}" Value="False">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding Developer.Debug}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Sandbox}" Value="False">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding Developer.Master}" Value="{x:Null}">
+                            <DataTrigger Binding="{Binding Config.Storage.Count}" Value="0">
                                 <Setter Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding Developer.Master.Enabled}" Value="False">
-                                <Setter Property="IsEnabled" Value="False" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -488,7 +488,7 @@
                                         <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
                                             <Setter Property="Text" Value="{Binding Date.Launch, StringFormat=G}" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Type}" Value="CSGO" >
+                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Type}" Value="CSGO">
                                                     <Setter Property="Text">
                                                         <Setter.Value>
                                                             <MultiBinding StringFormat="{}{0:00}.{1:00}:{2:00}">
@@ -1001,56 +1001,6 @@
                                 Visibility="{Binding ElementName=MetroWindow, Path=DataContext.Sandbox, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <Label
-                                        Margin="-4,0,0,-4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Content="Battle Encoder Shirase:"
-                                        FontSize="9" />
-                                    <TextBox
-                                        Height="23"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Top"
-                                        BorderThickness="0,0,0,1"
-                                        Text="{Binding BattleEncoderShirase.Directory, UpdateSourceTrigger=PropertyChanged}"
-                                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                        ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
-                                </StackPanel>
-                                <Button
-                                    Grid.Column="1"
-                                    Width="22"
-                                    Height="20"
-                                    Margin="4,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Bottom"
-                                    controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                                    controls:ControlsHelper.FocusBorderBrush="Transparent"
-                                    controls:ControlsHelper.FocusBorderThickness="0"
-                                    controls:ControlsHelper.MouseOverBorderBrush="Transparent"
-                                    Background="Transparent"
-                                    BorderBrush="Transparent"
-                                    BorderThickness="0"
-                                    Click="BattleEncoderShiraseBrowse_Click"
-                                    Focusable="False"
-                                    Style="{StaticResource Icon}"
-                                    ToolTip="Настроить папку с Battle Encoder Shirase">
-                                    <Path
-                                        Data="M4 4C2.89 4 2 4.89 2 6V18C2 19.11 2.9 20 4 20H12.08A7 7 0 0 1 12 19A7 7 0 0 1 19 12A7 7 0 0 1 22 12.69V8C22 6.89 21.1 6 20 6H12L10 4H4M18 14C17.87 14 17.76 14.09 17.74 14.21L17.55 15.53C17.25 15.66 16.96 15.82 16.7 16L15.46 15.5C15.35 15.5 15.22 15.5 15.15 15.63L14.15 17.36C14.09 17.47 14.11 17.6 14.21 17.68L15.27 18.5C15.25 18.67 15.24 18.83 15.24 19C15.24 19.17 15.25 19.33 15.27 19.5L14.21 20.32C14.12 20.4 14.09 20.53 14.15 20.64L15.15 22.37C15.21 22.5 15.34 22.5 15.46 22.5L16.7 22C16.96 22.18 17.24 22.35 17.55 22.47L17.74 23.79C17.76 23.91 17.86 24 18 24H20C20.11 24 20.22 23.91 20.24 23.79L20.43 22.47C20.73 22.34 21 22.18 21.27 22L22.5 22.5C22.63 22.5 22.76 22.5 22.83 22.37L23.83 20.64C23.89 20.53 23.86 20.4 23.77 20.32L22.7 19.5C22.72 19.33 22.74 19.17 22.74 19C22.74 18.83 22.73 18.67 22.7 18.5L23.76 17.68C23.85 17.6 23.88 17.47 23.82 17.36L22.82 15.63C22.76 15.5 22.63 15.5 22.5 15.5L21.27 16C21 15.82 20.73 15.65 20.42 15.53L20.23 14.21C20.22 14.09 20.11 14 20 14H18M19 17.5C19.83 17.5 20.5 18.17 20.5 19C20.5 19.83 19.83 20.5 19 20.5C18.16 20.5 17.5 19.83 17.5 19C17.5 18.17 18.17 17.5 19 17.5Z"
-                                        Fill="MediumPurple"
-                                        Stretch="Fill" />
-                                </Button>
-                            </Grid>
-                            <Grid
-                                Margin="0,5,5,0"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Top"
-                                DataContext="{Binding Config}"
-                                Visibility="{Binding ElementName=MetroWindow, Path=DataContext.Sandbox, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="25" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
@@ -1059,23 +1009,35 @@
                                         Margin="-4,0,0,-4"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
-                                        Content="Battle Encoder Shirase: (%)"
+                                        Content="Разрешение:"
                                         FontSize="9" />
-                                    <Slider
-                                        Height="26"
-                                        Margin="0,0,0,10"
+                                    <ComboBox
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Top"
                                         BorderThickness="0,0,0,1"
-                                        DataContext="{Binding BattleEncoderShirase}"
-                                        IsEnabled="{Binding Directory, Converter={StaticResource StringToBooleanConverter}}"
-                                        IsMoveToPointEnabled="True"
-                                        Maximum="100"
-                                        Minimum="0"
-                                        Style="{StaticResource Slider}"
-                                        TickPlacement="BottomRight"
-                                        Ticks="{Binding ThrottleTick}"
-                                        Value="{Binding Throttle}" />
+                                        DisplayMemberPath="Value"
+                                        ItemsSource="{Binding ElementName=MetroWindow, Path=DataContext.Resolution}"
+                                        SelectedValue="{Binding Resolution, UpdateSourceTrigger=PropertyChanged}"
+                                        SelectedValuePath="Value"
+                                        SelectionChanged="Location_SelectionChanged">
+                                        <ComboBox.ItemContainerStyle>
+                                            <Style BasedOn="{StaticResource MahApps.Styles.ComboBoxItem}" TargetType="{x:Type ComboBoxItem}">
+                                                <Setter Property="ToolTip">
+                                                    <Setter.Value>
+                                                        <TextBlock
+                                                            MaxWidth="236"
+                                                            MaxHeight="80"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Top"
+                                                            Background="Transparent"
+                                                            Style="{StaticResource TextBlock}"
+                                                            Text="{Binding Dimension}"
+                                                            TextWrapping="Wrap" />
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </ComboBox.ItemContainerStyle>
+                                    </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <Label
@@ -1127,81 +1089,81 @@
                                         ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                         ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
-                                
-                                <Grid Grid.Column="2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <Label
+                                <StackPanel Grid.Column="2">
+                                    <Label
                                         Margin="-4,0,0,-4"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
                                         Content="Telegram Token:"
                                         FontSize="9" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
                                         <TextBox
-                                        Height="23"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Top"
-                                        BorderThickness="0,0,0,1"
-                                        Text="{Binding Telegram.Token, UpdateSourceTrigger=PropertyChanged}"
-                                        ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
-                                        ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
-                                    </StackPanel>
-                                    <ToggleButton
-                                    Grid.Column="1"
-                                    Width="20"
-                                    Height="18"
-                                    Margin="8,0,0,2"
-                                    HorizontalAlignment="Left"
-                                    VerticalAlignment="Bottom"
-                                    controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                                    controls:ControlsHelper.FocusBorderBrush="Transparent"
-                                    controls:ControlsHelper.FocusBorderThickness="0"
-                                    controls:ControlsHelper.MouseOverBorderBrush="Transparent"
-                                    Background="Transparent"
-                                    BorderBrush="Transparent"
-                                    BorderThickness="0"
-                                    Focusable="False"
-                                    IsChecked="{Binding Telegram.Notification}"
-                                    Style="{StaticResource Icon}">
-                                        <Image>
-                                            <Image.Style>
-                                                <Style TargetType="{x:Type Image}">
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Telegram.Notification}" Value="False">
-                                                            <Setter Property="Source">
-                                                                <Setter.Value>
-                                                                    <DrawingImage>
-                                                                        <DrawingImage.Drawing>
-                                                                            <DrawingGroup>
-                                                                                <GeometryDrawing Brush="MediumPurple" Geometry="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21" />
-                                                                            </DrawingGroup>
-                                                                        </DrawingImage.Drawing>
-                                                                    </DrawingImage>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Telegram.Notification}" Value="True">
-                                                            <Setter Property="Source">
-                                                                <Setter.Value>
-                                                                    <DrawingImage>
-                                                                        <DrawingImage.Drawing>
-                                                                            <DrawingGroup>
-                                                                                <GeometryDrawing Brush="MediumPurple" Geometry="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21M19.75,3.19L18.33,4.61C20.04,6.3 21,8.6 21,11H23C23,8.07 21.84,5.25 19.75,3.19M1,11H3C3,8.6 3.96,6.3 5.67,4.61L4.25,3.19C2.16,5.25 1,8.07 1,11Z" />
-                                                                            </DrawingGroup>
-                                                                        </DrawingImage.Drawing>
-                                                                    </DrawingImage>
-                                                                </Setter.Value>
-                                                            </Setter>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Image.Style>
-                                        </Image>
-                                    </ToggleButton>
-                                </Grid>
+                                            Grid.Column="0"
+                                            Height="23"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Top"
+                                            BorderThickness="0,0,0,1"
+                                            Text="{Binding Telegram.Token, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                            ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
+                                        <ToggleButton
+                                            Grid.Column="1"
+                                            Width="20"
+                                            Height="18"
+                                            Margin="8,0,0,2"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Bottom"
+                                            controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                                            controls:ControlsHelper.FocusBorderBrush="Transparent"
+                                            controls:ControlsHelper.FocusBorderThickness="0"
+                                            controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            BorderThickness="0"
+                                            Focusable="False"
+                                            IsChecked="{Binding Telegram.Notification}"
+                                            Style="{StaticResource Icon}">
+                                            <Image>
+                                                <Image.Style>
+                                                    <Style TargetType="{x:Type Image}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Telegram.Notification}" Value="False">
+                                                                <Setter Property="Source">
+                                                                    <Setter.Value>
+                                                                        <DrawingImage>
+                                                                            <DrawingImage.Drawing>
+                                                                                <DrawingGroup>
+                                                                                    <GeometryDrawing Brush="MediumPurple" Geometry="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21" />
+                                                                                </DrawingGroup>
+                                                                            </DrawingImage.Drawing>
+                                                                        </DrawingImage>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Telegram.Notification}" Value="True">
+                                                                <Setter Property="Source">
+                                                                    <Setter.Value>
+                                                                        <DrawingImage>
+                                                                            <DrawingImage.Drawing>
+                                                                                <DrawingGroup>
+                                                                                    <GeometryDrawing Brush="MediumPurple" Geometry="M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M14,21A2,2 0 0,1 12,23A2,2 0 0,1 10,21M19.75,3.19L18.33,4.61C20.04,6.3 21,8.6 21,11H23C23,8.07 21.84,5.25 19.75,3.19M1,11H3C3,8.6 3.96,6.3 5.67,4.61L4.25,3.19C2.16,5.25 1,8.07 1,11Z" />
+                                                                                </DrawingGroup>
+                                                                            </DrawingImage.Drawing>
+                                                                        </DrawingImage>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                        </ToggleButton>
+                                    </Grid>
+                                </StackPanel>
                             </Grid>
                             <Grid
                                 Margin="0,5,5,0"
@@ -1219,76 +1181,53 @@
                                         Margin="-4,0,0,-4"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
-                                        Content="Разрешение:"
+                                        Content="Battle Encoder Shirase:"
                                         FontSize="9" />
-                                    <ComboBox
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Top"
-                                        BorderThickness="0,0,0,1"
-                                        DisplayMemberPath="Value"
-                                        ItemsSource="{Binding ElementName=MetroWindow, Path=DataContext.Resolution}"
-                                        SelectedValue="{Binding Resolution, UpdateSourceTrigger=PropertyChanged}"
-                                        SelectedValuePath="Value"
-                                        SelectionChanged="Location_SelectionChanged">
-                                        <ComboBox.ItemContainerStyle>
-                                            <Style BasedOn="{StaticResource MahApps.Styles.ComboBoxItem}" TargetType="{x:Type ComboBoxItem}">
-                                                <Setter Property="ToolTip">
-                                                    <Setter.Value>
-                                                        <TextBlock
-                                                            MaxWidth="236"
-                                                            MaxHeight="80"
-                                                            HorizontalAlignment="Left"
-                                                            VerticalAlignment="Top"
-                                                            Background="Transparent"
-                                                            Style="{StaticResource TextBlock}"
-                                                            Text="{Binding Dimension}"
-                                                            TextWrapping="Wrap" />
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </ComboBox.ItemContainerStyle>
-                                    </ComboBox>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox
+                                            Grid.Column="0"
+                                            Height="23"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Top"
+                                            BorderThickness="0,0,0,1"
+                                            Text="{Binding BattleEncoderShirase.Directory, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
+                                            ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
+                                        <Button
+                                            Grid.Column="1"
+                                            Width="20"
+                                            Height="18"
+                                            Margin="8,0,0,2"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Bottom"
+                                            controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                                            controls:ControlsHelper.FocusBorderBrush="Transparent"
+                                            controls:ControlsHelper.FocusBorderThickness="0"
+                                            controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            BorderThickness="0"
+                                            Click="BattleEncoderShiraseBrowse_Click"
+                                            Focusable="False"
+                                            Style="{StaticResource Icon}"
+                                            ToolTip="Настроить папку с Battle Encoder Shirase">
+                                            <Path
+                                                Data="M4 4C2.89 4 2 4.89 2 6V18C2 19.11 2.9 20 4 20H12.08A7 7 0 0 1 12 19A7 7 0 0 1 19 12A7 7 0 0 1 22 12.69V8C22 6.89 21.1 6 20 6H12L10 4H4M18 14C17.87 14 17.76 14.09 17.74 14.21L17.55 15.53C17.25 15.66 16.96 15.82 16.7 16L15.46 15.5C15.35 15.5 15.22 15.5 15.15 15.63L14.15 17.36C14.09 17.47 14.11 17.6 14.21 17.68L15.27 18.5C15.25 18.67 15.24 18.83 15.24 19C15.24 19.17 15.25 19.33 15.27 19.5L14.21 20.32C14.12 20.4 14.09 20.53 14.15 20.64L15.15 22.37C15.21 22.5 15.34 22.5 15.46 22.5L16.7 22C16.96 22.18 17.24 22.35 17.55 22.47L17.74 23.79C17.76 23.91 17.86 24 18 24H20C20.11 24 20.22 23.91 20.24 23.79L20.43 22.47C20.73 22.34 21 22.18 21.27 22L22.5 22.5C22.63 22.5 22.76 22.5 22.83 22.37L23.83 20.64C23.89 20.53 23.86 20.4 23.77 20.32L22.7 19.5C22.72 19.33 22.74 19.17 22.74 19C22.74 18.83 22.73 18.67 22.7 18.5L23.76 17.68C23.85 17.6 23.88 17.47 23.82 17.36L22.82 15.63C22.76 15.5 22.63 15.5 22.5 15.5L21.27 16C21 15.82 20.73 15.65 20.42 15.53L20.23 14.21C20.22 14.09 20.11 14 20 14H18M19 17.5C19.83 17.5 20.5 18.17 20.5 19C20.5 19.83 19.83 20.5 19 20.5C18.16 20.5 17.5 19.83 17.5 19C17.5 18.17 18.17 17.5 19 17.5Z"
+                                                Fill="MediumPurple"
+                                                Stretch="Fill" />
+                                        </Button>
+                                    </Grid>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">
                                     <Label
                                         Margin="-4,0,0,-4"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
-                                        Content="Inventory Price:"
-                                        FontSize="9" />
-                                    <TextBox
-                                        Height="23"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Top"
-                                        BorderThickness="0,0,0,1"
-                                        Text="{Binding Inventory.Price, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}">
-                                        <TextBox.ToolTip>
-                                            <TextBlock Style="{StaticResource TextBlock}">
-                                                <Run Text="Отправка выпавшего дропа ASF Master аккаунту" />
-                                                <LineBreak />
-                                                <Run Text="Где N минимальная цена выпавшего предмета, 0 - отключение" />
-                                            </TextBlock>
-                                        </TextBox.ToolTip>
-                                    </TextBox>
-                                </StackPanel>
-                            </Grid>
-                            <Grid
-                                Margin="0,5,5,0"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Top"
-                                DataContext="{Binding Config}"
-                                Visibility="{Binding ElementName=MetroWindow, Path=DataContext.Sandbox, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="25" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <Label
-                                        Margin="-4,0,0,-4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Content="Inventory Max:"
+                                        Content="Battle Encoder Shirase: (%)"
                                         FontSize="9" />
                                     <Slider
                                         Height="26"
@@ -1296,38 +1235,15 @@
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Top"
                                         BorderThickness="0,0,0,1"
-                                        DataContext="{Binding Inventory}"
+                                        DataContext="{Binding BattleEncoderShirase}"
+                                        IsEnabled="{Binding Directory, Converter={StaticResource StringToBooleanConverter}}"
                                         IsMoveToPointEnabled="True"
-                                        Maximum="255"
-                                        Minimum="1"
+                                        Maximum="100"
+                                        Minimum="0"
                                         Style="{StaticResource Slider}"
                                         TickPlacement="BottomRight"
-                                        Ticks="{Binding MaxTick}"
-                                        ToolTip="Максимум предметов которые должны быть получены"
-                                        Value="{Binding Max}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="2">
-                                    <Label
-                                        Margin="-4,0,0,-4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Content="Inventory Check:"
-                                        FontSize="9" />
-                                    <Slider
-                                        Height="26"
-                                        Margin="0,0,0,6"
-                                        HorizontalAlignment="Stretch"
-                                        VerticalAlignment="Top"
-                                        BorderThickness="0,0,0,1"
-                                        DataContext="{Binding Inventory}"
-                                        IsMoveToPointEnabled="True"
-                                        Maximum="255"
-                                        Minimum="1"
-                                        Style="{StaticResource Slider}"
-                                        TickPlacement="BottomRight"
-                                        Ticks="{Binding CheckTick}"
-                                        ToolTip="В N время происходит проверка инвентарей Steam"
-                                        Value="{Binding Check}" />
+                                        Ticks="{Binding ThrottleTick}"
+                                        Value="{Binding Throttle}" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -1489,9 +1405,6 @@
                                     <Button.Style>
                                         <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="{x:Type Button}">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ASF.IsValid}" Value="False">
-                                                    <Setter Property="IsEnabled" Value="False" />
-                                                </DataTrigger>
                                                 <DataTrigger Binding="{Binding ASF.Bot}" Value="{x:Null}">
                                                     <Setter Property="IsEnabled" Value="False" />
                                                 </DataTrigger>
@@ -1735,7 +1648,7 @@
                                 FontSize="9" />
                             <StackPanel Orientation="Horizontal">
                                 <TextBox
-                                    Width="167"
+                                    Width="160"
                                     Height="23"
                                     Margin="5,0,0,0"
                                     HorizontalAlignment="Left"
@@ -1746,8 +1659,7 @@
                                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                                     ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
                                 <Button
-                                    Width="28"
-                                    Height="28"
+                                    Height="16"
                                     Margin="5,0,0,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
@@ -1760,16 +1672,7 @@
                                     BorderThickness="0"
                                     Click="ASF_Click"
                                     Focusable="False"
-                                    ToolTip="Обновить конфигурацию бота ASF">
-                                    <Button.Style>
-                                        <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="{x:Type Button}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ASF.IsValid}" Value="False">
-                                                    <Setter Property="IsEnabled" Value="False" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
+                                    Style="{StaticResource Icon}">
                                     <Image>
                                         <Image.Source>
                                             <DrawingImage>
@@ -1790,7 +1693,7 @@
                             VerticalAlignment="Top">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="10" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
@@ -1820,7 +1723,7 @@
                                     Content="ASF Password:"
                                     FontSize="9" />
                                 <TextBox
-                                    Width="135"
+                                    Width="95"
                                     Height="23"
                                     Margin="5,0,0,0"
                                     HorizontalAlignment="Left"
@@ -2123,7 +2026,7 @@
                                                                     <Setter Property="Text" Value="{Binding IReceive}" />
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Fee}" Value="False">
-                                                                    <Setter Property="Text" Value="{Binding IPay}" />
+                                                                    <Setter Property="Text" Value="{Binding IPrice}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -2171,29 +2074,29 @@
                             </TextBlock>
                         </Grid>
                         <StackPanel Grid.Row="2" VerticalAlignment="Center">
-                            <StackPanel Orientation="Horizontal" Visibility="{Binding Config.Audit.Count, Converter={StaticResource IntegerToVisibilityConverter}}">
+                            <StackPanel.Style>
+                                <Style TargetType="{x:Type StackPanel}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Config.Revise}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding Config.Storage.Count, Converter={StaticResource IntegerToVisibilityConverter}}">
                                 <TextBlock Margin="5,0,0,0" Foreground="LightGray">
                                     <TextBlock.Text>
                                         <MultiBinding Mode="OneWay" StringFormat="{}Статистика: {0} ({1})">
-                                            <Binding Path="Config.Together.Item1" />
-                                            <Binding Path="Config.Together.Item2" />
+                                            <Binding Path="Config.Revise.Item1" />
+                                            <Binding Path="Config.Revise.Item2" />
                                         </MultiBinding>
                                     </TextBlock.Text>
                                 </TextBlock>
                                 <TextBlock
                                     Margin="5,0,0,0"
                                     Foreground="LightGray"
-                                    Text="{Binding Config.Average, StringFormat='{}≈ {0}'}">
-                                    <TextBlock.Style>
-                                        <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Developer.Master.Selected}" Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                    Style="{StaticResource TextBlock}"
+                                    Text="{Binding Config.Revise.Item3, StringFormat='{}≈ {0}'}" />
                             </StackPanel>
                         </StackPanel>
                     </Grid>

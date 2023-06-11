@@ -326,104 +326,12 @@ namespace Granger
 
         #endregion
 
-        #region Inventory
-
-        public class IInventory : INotifyPropertyChanged
-        {
-            private byte _Max = 1;
-
-            [JsonProperty]
-            public byte Max
-            {
-                get => _Max;
-                set
-                {
-                    _Max = value;
-
-                    NotifyPropertyChanged(nameof(Max));
-                    NotifyPropertyChanged(nameof(MaxTick));
-                }
-            }
-
-            public bool ShouldSerializeMax() => Max != 1;
-
-            [JsonIgnore]
-            public string MaxTick
-            {
-                get => Max.ToString();
-            }
-
-            private byte _Check = 3;
-
-            [JsonProperty]
-            public byte Check
-            {
-                get => _Check;
-                set
-                {
-                    _Check = value;
-
-                    NotifyPropertyChanged(nameof(Check));
-                    NotifyPropertyChanged(nameof(CheckTick));
-                }
-            }
-
-            public bool ShouldSerializeCheck() => Check != 3;
-
-            [JsonIgnore]
-            public string CheckTick
-            {
-                get => Check.ToString();
-            }
-
-            private decimal _Price = 0.01m;
-
-            [JsonProperty]
-            public decimal Price
-            {
-                get => _Price;
-                set
-                {
-                    _Price = value;
-
-                    NotifyPropertyChanged(nameof(Price));
-                }
-            }
-
-            public bool ShouldSerializeSend() => Price != 0.01m;
-
-            public event PropertyChangedEventHandler? PropertyChanged;
-
-            public void NotifyPropertyChanged(string? propertyName = null)
-            {
-                PropertyChanged?.Invoke(this, new(propertyName));
-            }
-        }
-
-        private IInventory _Inventory = new();
-
-        [JsonProperty]
-        public IInventory Inventory
-        {
-            get => _Inventory;
-            set
-            {
-                _Inventory = value;
-
-                NotifyPropertyChanged(nameof(Inventory));
-            }
-        }
-
-        public bool ShouldSerializeInventory() => Inventory.ShouldSerializeMax() || Inventory.ShouldSerializeCheck() || Inventory.ShouldSerializeSend();
-
-        #endregion
-
         #region Resolution 
 
         public enum EResolution : byte
         {
             Large,
-            Tiny
+            N1
         }
 
         public class IResolution
@@ -434,11 +342,13 @@ namespace Granger
             {
                 public int Width { get; set; }
                 public int Height { get; set; }
+                public bool Border { get; set; }
 
-                public IDimension(int Width, int Height)
+                public IDimension(int Width, int Height, bool Border)
                 {
                     this.Width = Width;
                     this.Height = Height;
+                    this.Border = Border;
                 }
 
                 public override string ToString()
@@ -456,7 +366,7 @@ namespace Granger
             }
         }
 
-        private EResolution _Resolution = EResolution.Tiny;
+        private EResolution _Resolution = EResolution.N1;
 
         [JsonProperty]
         public EResolution Resolution
@@ -478,10 +388,8 @@ namespace Granger
         {
             [Description("Отсутствует")]
             None,
-            [Description("Запущенный")]
-            Launch,
-            [Description("Дроп")]
-            Drop
+            [Description("Запуск")]
+            Launch
         }
 
         private ESort _Sort = ESort.None;
@@ -502,6 +410,24 @@ namespace Granger
 
         #endregion
 
+        public bool ShouldSerializeShowLogin() => !ShowLogin;
+
+        private int _GameStateListener = 3000;
+
+        [JsonProperty("Game State Listener")]
+        public int GameStateListener
+        {
+            get => _GameStateListener;
+            set
+            {
+                _GameStateListener = value;
+
+                NotifyPropertyChanged(nameof(GameStateListener));
+            }
+        }
+
+        public bool ShouldSerializeGameStateListener() => GameStateListener != 3000;
+
         private bool _ShowLogin = true;
 
         [JsonProperty("Show Login")]
@@ -515,8 +441,6 @@ namespace Granger
                 NotifyPropertyChanged(nameof(ShowLogin));
             }
         }
-
-        public bool ShouldSerializeShowLogin() => !ShowLogin;
 
         #region Account List
 
@@ -598,7 +522,6 @@ namespace Granger
                         _IP = value;
 
                         NotifyPropertyChanged(nameof(IP));
-                        NotifyPropertyChanged(nameof(IsValid));
                     }
                 }
 
@@ -620,7 +543,6 @@ namespace Granger
                         _Index = value;
 
                         NotifyPropertyChanged(nameof(Index));
-                        NotifyPropertyChanged(nameof(IsValid));
                     }
                 }
 
@@ -646,12 +568,6 @@ namespace Granger
                 }
 
                 public bool ShouldSerializePassword() => !string.IsNullOrEmpty(Password);
-
-                [JsonIgnore]
-                public bool IsValid
-                {
-                    get => ShouldSerializeIP() && ShouldSerializeIndex();
-                }
 
                 private IAccount.IBot.IDictionary? _Bot;
 
@@ -691,7 +607,7 @@ namespace Granger
                 }
             }
 
-            public bool ShouldSerializeASF() => ASF.ShouldSerializeIP() || ASF.ShouldSerializeIndex() || ASF.ShouldSerializeIndex();
+            public bool ShouldSerializeASF() => ASF.ShouldSerializeIP() && ASF.ShouldSerializeIndex();
 
 
             public event PropertyChangedEventHandler? PropertyChanged;
@@ -2143,10 +2059,14 @@ namespace Granger
                         }
                     }
 
-                    private DateTime? _Drop;
+                    private Dictionary<IAuto.EType, DateTime?> _Drop = new()
+                    {
+                        { IAuto.EType.CSGO, null },
+                        { IAuto.EType.TF2, null }
+                    };
 
                     [JsonProperty]
-                    public DateTime? Drop
+                    public Dictionary<IAuto.EType, DateTime?> Drop
                     {
                         get => _Drop;
                         set
@@ -2158,25 +2078,34 @@ namespace Granger
                         }
                     }
 
-                    public bool ShouldSerializeDrop() => Drop.HasValue;
+                    public bool ShouldSerializeDrop() => Drop.Any(x => x.Value.HasValue);
 
                     [JsonIgnore]
                     public TimeSpan? Left
                     {
                         get
                         {
-                            if (Drop.HasValue)
+                            if (Drop.ContainsKey(Auto.Type))
                             {
-                                int _ = (DayOfWeek.Wednesday - DateTime.Today.DayOfWeek + 6) % 7;
-
-                                var Value = DateTime.Today.AddDays(_ + 1);
-
-                                if (DateTime.Now > Value)
+                                if (Drop.TryGetValue(Auto.Type, out var X))
                                 {
-                                    return null;
-                                }
+                                    if (X.HasValue)
+                                    {
+                                        var Date = DateTime.UtcNow.Date;
 
-                                return Value - DateTime.Now;
+                                        int Hour = 4;
+                                        int Day = (DayOfWeek.Thursday - Date.DayOfWeek + 7) % 7;
+
+                                        var Value = Date.AddDays(Day).AddHours(Hour);
+
+                                        if (DateTime.Now > Value)
+                                        {
+                                            return null;
+                                        }
+
+                                        return Value - DateTime.Now;
+                                    }
+                                }
                             }
 
                             return null;
@@ -2818,19 +2747,6 @@ namespace Granger
                                 }
                                 else if (Line == "IN_GAME")
                                 {
-                                    if (Auto.Inventory.Enabled && !Auto.Inventory.Advance)
-                                    {
-                                        if (Account.Bin.Position.Key == IBin.EPosition.IN_GAME)
-                                        {
-                                            var TimeSpan = DateTime.Now - Account.Bin.Position.Value;
-
-                                            if (TimeSpan.TotalMinutes > Auto.Config!.Inventory.Check)
-                                            {
-                                                Auto.Inventory.Advance = true;
-                                            }
-                                        }
-                                    }
-
                                     if (Account.Bin.Position.Key == IBin.EPosition.NONE || Account.Bin.Position.Key == IBin.EPosition.MAIN_MENU)
                                     {
                                         Account.Bin.Position = new(IBin.EPosition.IN_GAME, DateTime.Now);
@@ -3324,35 +3240,31 @@ namespace Granger
         {
             public string Name { get; set; }
 
-            public decimal Pay { get; set; }
+            public decimal Price { get; set; }
 
-            public decimal Receive
-            {
-                get
-                {
-                    decimal Fee = Math.Round(Pay * 13 / 100, 2);
-
-                    return Pay - Fee;
-                }
-            }
+            public decimal Receive { get; set; }
 
             public int Count { get; set; }
 
             public double Percent { get; set; }
 
-            public IAudit(string Name, decimal Pay, int Count, double Percent)
+            public IAudit(string Name, decimal Price, int Count, double Percent)
             {
                 this.Name = Name;
-                this.Pay = Pay;
+
+                var Receive = Math.Round(Price * 13 / 100, 2);
+
+                this.Price = Price;
+                this.Receive = Price - Receive;
+
                 this.Count = Count;
                 this.Percent = Percent;
             }
 
-            public string IPay
+            public string IPrice
             {
-                get => Pay.ToString("C", Auto.Config!.Steam.Culture);
+                get => Price.ToString("C", Auto.Config!.Steam.Culture);
             }
-
 
             public string IReceive
             {
@@ -3404,25 +3316,20 @@ namespace Granger
         #endregion
 
         [JsonIgnore]
-        public Tuple<int, string> Together
+        public Tuple<int, string, string>? Revise
         {
-            get => Tuple.Create(
-                Audit.Sum(x => x.Count),
-                Math.Round(Audit.Sum(x => Auto.Fee ? x.Receive : x.Pay), 2).ToString("C", Auto.Config!.Steam.Culture)
-            );
-        }
-
-        private string? _Average;
-
-        [JsonIgnore]
-        public string? Average
-        {
-            get => _Average;
-            set
+            get
             {
-                _Average = value;
+                if (Audit.Count == 0) return null;
 
-                NotifyPropertyChanged(nameof(Average));
+                int Count = Audit.Sum(x => x.Count);
+                var _ = Audit.Sum(x => Auto.Fee ? x.Receive : x.Price);
+
+                return Tuple.Create(
+                    Count,
+                    Math.Round(_, 2).ToString("C", Auto.Config!.Steam.Culture),
+                    Math.Round(_ / Count, 2).ToString("C", Auto.Config!.Steam.Culture)
+                );
             }
         }
 
@@ -3450,8 +3357,6 @@ namespace Granger
                         return new IStorage(x.Login.ToUpper(), T);
                     })
                     .ToList();
-
-                Auto.Inventory.Reset();
             }
 
             if (_.Contains(EUpdate.Audit))
@@ -3469,21 +3374,12 @@ namespace Granger
                         x.Count(),
                         Math.Round((double)x.Count() / X.Count() * 100, 2)
                     ))
+                    .OrderBy(x => x.Price)
                     .OrderBy(x => x.Count)
                     .Reverse()
                     .ToList();
 
-                if (Audit.Count > 0)
-                {
-                    NotifyPropertyChanged(nameof(Together));
-
-                    decimal? Average = Audit.Sum(v => Auto.Fee ? v.Receive : v.Pay) / Audit.Sum(x => x.Count);
-
-                    if (Average.HasValue)
-                    {
-                        this.Average = Math.Round(Average.Value, 2).ToString("C", Auto.Config!.Steam.Culture);
-                    }
-                }
+                NotifyPropertyChanged(nameof(Revise));
             }
 
             return Storage.Count > 0;

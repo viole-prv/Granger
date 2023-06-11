@@ -114,18 +114,6 @@
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Bottom"
                                 PreviewMouseDown="Cluster_Click">
-                                <Grid.Style>
-                                    <Style TargetType="{x:Type Grid}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding AccountList.Count, Converter={StaticResource IntegerToVisibilityConverter}}" Value="Visible">
-                                                <Setter Property="Grid.Column" Value="1" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding AccountList.Count, Converter={StaticResource IntegerToVisibilityConverter}}" Value="Collapsed">
-                                                <Setter Property="Grid.ColumnSpan" Value="2" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Grid.Style>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="*" />

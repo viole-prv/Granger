@@ -23,9 +23,6 @@ namespace Granger
         public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
         public const uint MOUSEEVENTF_LEFTUP = 0x0004;
 
-        public const int KEYEVENTF_EXTENDEDKEY = 0x0001;
-        public const int KEYEVENTF_KEYUP = 0x0002;
-
 #pragma warning disable CA1401 // OnPrevious/Invokes should not be visible
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
@@ -317,8 +314,8 @@ namespace Granger
             }
 
             return null;
-        }    
-        
+        }
+
         public static decimal? Price()
         {
             return Random.Next(1, 2 + 1) switch
@@ -327,7 +324,7 @@ namespace Granger
                 _ => null
             };
         }
-        
+
         public static bool? Trade()
         {
             return Random.Next(1, 3 + 1) switch
@@ -337,7 +334,7 @@ namespace Granger
                 _ => null
             };
         }
-           
+
         public static string? Lock()
         {
             switch (Random.Next(1, 4 + 1))
