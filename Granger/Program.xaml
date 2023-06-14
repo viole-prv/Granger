@@ -90,6 +90,9 @@
                             <DataTrigger Binding="{Binding .}" Value="{x:Null}">
                                 <Setter Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Bin.Condition, Converter={StaticResource IntegerToVisibilityConverter}}" Value="Visible">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Button.Style>

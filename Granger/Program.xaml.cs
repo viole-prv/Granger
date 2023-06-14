@@ -1354,11 +1354,21 @@ namespace Granger
                                                 {
                                                     await Task.Delay(2500);
 
-                                                    (string? Icon, decimal? Price) = await Render(Watcher, X.Key);
+                                                    var Render = await Account.Render(Watcher, X.Key);
 
-                                                    if (string.IsNullOrEmpty(Icon) || Price == null) continue;
+                                                    if (Render == null || Render.Description == null) continue;
 
-                                                    Auto.Inventory.Dictionary.Add(X.Key, (Icon, Price.Value));
+                                                    string? Icon = Render.Description.Icon;
+                                                    string? Price = Render.Price;
+
+                                                    if (string.IsNullOrEmpty(Icon) || string.IsNullOrEmpty(Price)) continue;
+
+                                                    var _ = Helper.ToPrice(Price, Auto.Config!.Steam.Culture);
+
+                                                    if (_.HasValue)
+                                                    {
+                                                        Auto.Inventory.Dictionary.Add(X.Key, (Icon, _.Value));
+                                                    }
 
                                                     T(Icon);
                                                 }
@@ -2086,7 +2096,9 @@ namespace Granger
         {
             if (Auto.Config == null) return;
 
-            foreach (var X in Auto.Config.AccountList)
+            var AccountList = Auto.Config.AccountList.OrderBy(x => x.Login);
+
+            foreach (var X in AccountList)
             {
                 X.Visibility = true;
             }
@@ -2094,27 +2106,16 @@ namespace Granger
             switch (Auto.Config.Sort)
             {
                 case IConfig.ESort.None:
-                    Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
-                        Auto.Config.AccountList
-                            .OrderBy(x => x.Login));
+                    Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(AccountList);
 
                     break;
 
                 case IConfig.ESort.Launch:
                     Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
                         Auto.Sandbox
-                            ? Auto.Config.AccountList
-                                .Where(x => x.Setup.Date.Drop.ContainsKey(Auto.Type))
-                                .OrderBy(x =>
-                                {
-                                    if (x.Setup.Date.Drop.TryGetValue(Auto.Type, out var X))
-                                    {
-                                        return X;
-                                    }
+                            ? AccountList.OrderBy(x => x.Setup.Date.Left)
 
-                                    return null;
-                                })
-                            : Auto.Config.AccountList
+                            : AccountList
                                 .OrderBy(x => x.Setup.Date.Launch)
                                 .Reverse());
 
@@ -3046,25 +3047,30 @@ namespace Granger
                     switch (GameState.Map.Phase)
                     {
                         case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
-                            Logger.LogGenericDebug("Warmup!");
-
                             Auto.GameStateListener.Warmup = true;
                             Auto.GameStateListener.GameOver = false;
 
-                            if (Auto.Config!.AccountList.Any(x => x.Bin.Inventory == null))
+                            if (Auto.Inventory.Enabled)
                             {
-                                Auto.Inventory.Keep = false;
+                                if (Auto.Config!.AccountList
+                                    .Where(x => x.ShouldSerializeASF())
+                                    .Where(x => x.Bin.ShouldSerializeCondition())
+                                    .Any(x => x.Bin.Inventory == null))
+                                {
+                                    Auto.Inventory.Keep = false;
+                                }
                             }
 
                             return;
 
                         case MapPhase.GameOver when !Auto.GameStateListener.GameOver:
-                            Logger.LogGenericDebug("Game Over!");
-
                             Auto.GameStateListener.GameOver = true;
                             Auto.GameStateListener.Warmup = false;
 
-                            Auto.Inventory.Keep = false;
+                            if (Auto.Inventory.Enabled)
+                            {
+                                Auto.Inventory.Keep = false;
+                            }
 
                             return;
                     }
@@ -3955,7 +3961,10 @@ namespace Granger
                     Account.Setup.PersonaName = LoginUser.AccountName;
                     Account.Setup.RememberPassword = LoginUser.RememberPassword;
 
-                    InitGameStateListener(Account, true);
+                    if (Auto.Type == IAuto.EType.CSGO)
+                    {
+                        InitGameStateListener(Account, true);
+                    }
 
                     Auto.Config.Save();
 
@@ -4092,8 +4101,10 @@ namespace Granger
 
                     Account.Setup.Configured = ConfigureCheck(Account.Setup);
 
-
-                    InitGameStateListener(Account, false);
+                    if (Auto.Type == IAuto.EType.CSGO)
+                    {
+                        InitGameStateListener(Account, false);
+                    }
 
                     Auto.Config.Save();
 
@@ -5346,131 +5357,6 @@ namespace Granger
             }
 
             return (null, false);
-        }
-
-        public static async Task<(string? Icon, decimal? Price)> Render(IAuto.IWatcher Watcher, string MarketName, uint AppID = 0)
-        {
-            try
-            {
-                if (AppID == 0)
-                {
-                    AppID = Auto.AppID;
-                }
-
-                var Client = new RestClient(
-                    new RestClientOptions()
-                    {
-                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
-                        MaxTimeout = 300000
-                    });
-
-                var Request = new RestRequest($"https://steamcommunity.com/market/search/render/?query={Uri.EscapeDataString(MarketName)}&start=0&count=1&norender=1&appid={AppID}");
-
-                Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                for (byte i = 0; i < 3; i++)
-                {
-                    try
-                    {
-                        var Execute = await Client.ExecuteGetAsync(Request);
-
-                        Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                        if ((int)Execute.StatusCode == 429)
-                        {
-                            Logger.LogGenericWarning("Слишком много запросов!");
-
-                            await Task.Delay(TimeSpan.FromMinutes(2.5), Watcher.Source.Token);
-
-                            continue;
-                        }
-
-                        if (string.IsNullOrEmpty(Execute.Content))
-                        {
-                            if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                            {
-                                Logger.LogGenericWarning("Ответ пуст!");
-                            }
-                            else
-                            {
-                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                            }
-                        }
-                        else
-                        {
-                            if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                            {
-                                if (Logger.Helper.IsValidJson(Execute.Content))
-                                {
-                                    var JSON = JsonConvert.DeserializeObject<Steam.IRender>(Execute.Content);
-
-                                    if (JSON == null || JSON.Result == null)
-                                    {
-                                        Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
-                                    }
-                                    else
-                                    {
-                                        if (JSON.Success)
-                                        {
-                                            foreach (var X in JSON.Result)
-                                            {
-                                                if (X.Description == null || string.IsNullOrEmpty(X.Price)) continue;
-
-                                                return (
-                                                    X.Description.Icon,
-                                                    Helper.ToPrice(X.Price, Auto.Config!.Steam.Culture)
-                                                );
-                                            }
-                                        }
-                                    }
-
-                                    break;
-                                }
-                                else
-                                {
-                                    Logger.LogGenericDebug($"Ошибка: {Execute.Content}");
-                                }
-                            }
-                            else
-                            {
-                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                            }
-                        }
-
-                        await Task.Delay(2500, Watcher.Source.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        if (Auto.Developer.Debug)
-                        {
-                            Logger.LogGenericDebug("Задача успешно отменена!");
-                        }
-
-                        break;
-                    }
-                    catch (ObjectDisposedException) { break; }
-                    catch (Exception e)
-                    {
-                        Logger.LogGenericException(e);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                if (Auto.Developer.Debug)
-                {
-                    Logger.LogGenericDebug("Задача успешно отменена!");
-                }
-            }
-            catch (ObjectDisposedException) { }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-
-            return (
-                null, 0m
-            );
         }
 
         #region Storage

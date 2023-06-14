@@ -569,10 +569,10 @@ namespace Granger
 
                 public bool ShouldSerializePassword() => !string.IsNullOrEmpty(Password);
 
-                private IAccount.IBot.IDictionary? _Bot;
+                private IAccount.IBot.IValue? _Bot;
 
                 [JsonIgnore]
-                public IAccount.IBot.IDictionary? Bot
+                public IAccount.IBot.IValue? Bot
                 {
                     get => _Bot;
                     set
@@ -737,7 +737,7 @@ namespace Granger
 
             public class IBot
             {
-                public class IDictionary
+                public class IValue
                 {
                     [JsonProperty(Required = Required.Always)]
                     public bool HasMobileAuthenticator { get; private set; }
@@ -792,7 +792,7 @@ namespace Granger
                 }
 
                 [JsonProperty(Required = Required.Always)]
-                public Dictionary<string, IDictionary> Result { get; private set; } = new();
+                public Dictionary<string, IValue> Result { get; private set; } = new();
 
                 [JsonProperty(Required = Required.Always)]
                 public string Message { get; private set; } = "";
@@ -801,7 +801,7 @@ namespace Granger
                 public bool Success { get; private set; }
             }
 
-            public async Task<IBot.IDictionary?> Bot(IAuto.IWatcher? Watcher = null)
+            public async Task<IBot.IValue?> Bot(IAuto.IWatcher? Watcher = null)
             {
                 try
                 {
@@ -879,7 +879,7 @@ namespace Granger
                                             {
                                                 if (JSON.Result.ContainsKey(ASF.Index!))
                                                 {
-                                                    if (JSON.Result.TryGetValue(ASF.Index!, out IBot.IDictionary? Value))
+                                                    if (JSON.Result.TryGetValue(ASF.Index!, out IBot.IValue? Value))
                                                     {
                                                         return Value;
                                                     }
@@ -1091,11 +1091,345 @@ namespace Granger
 
             #endregion
 
+            #region Inventory
+
+            public class IInventory
+            {
+                public class IValue
+                {
+                    [JsonProperty("assets", Required = Required.DisallowNull)]
+                    public ImmutableList<Steam.IAsset>? Asset { get; private set; }
+
+                    [JsonProperty("descriptions", Required = Required.DisallowNull)]
+                    public ImmutableHashSet<Steam.IDescription>? Description { get; private set; }
+
+                    [JsonProperty("error", Required = Required.DisallowNull)]
+                    public string? Error { get; private set; }
+
+                    [JsonProperty("total_inventory_count", Required = Required.DisallowNull)]
+                    public int Count { get; private set; }
+
+                    [JsonProperty(Required = Required.DisallowNull)]
+                    public Steam.EResult Success { get; private set; }
+                }
+
+                [JsonProperty("Result", Required = Required.DisallowNull)]
+                public IValue? Value { get; private set; }
+
+                [JsonProperty(Required = Required.Always)]
+                public string Message { get; private set; } = "";
+
+                [JsonProperty(Required = Required.Always)]
+                public bool Success { get; private set; }
+            }
+
+            public async Task<IInventory.IValue?> Inventory(IAuto.IWatcher Watcher, uint AppID = 0, ulong ContextID = 0)
+            {
+                if (AppID == 0 && ContextID == 0)
+                {
+                    AppID = Auto.AppID;
+                    ContextID = Auto.ContextID;
+                }
+
+                try
+                {
+                    ASF.Bot = await Bot(Watcher);
+
+                    Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                    if (ASF.Bot is not null && ASF.Bot.IsConnectedAndLoggedOn)
+                    {
+                        var Client = new RestClient(
+                            new RestClientOptions()
+                            {
+                                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
+                                MaxTimeout = 300000
+                            });
+
+                        var Request = new RestRequest($"{ASF.IP}/Api/Annex/{ASF.Index}/Inventory/{AppID}/{ContextID}");
+
+                        if (!string.IsNullOrEmpty(ASF.Password))
+                        {
+                            Request.AddHeader("Authentication", ASF.Password);
+                        }
+
+                        Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                        for (byte i = 0; i < 3; i++)
+                        {
+                            try
+                            {
+                                var Execute = await Client.ExecuteGetAsync(Request);
+
+                                Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                                if ((int)Execute.StatusCode == 429)
+                                {
+                                    Logger.LogGenericWarning("Слишком много запросов!");
+
+                                    await Task.Delay(TimeSpan.FromMinutes(2.5), Watcher.Source.Token);
+
+                                    continue;
+                                }
+
+                                if (string.IsNullOrEmpty(Execute.Content))
+                                {
+                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
+                                    {
+                                        Logger.LogGenericWarning("Ответ пуст!");
+                                    }
+                                    else
+                                    {
+                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                                    }
+                                }
+                                else
+                                {
+                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
+                                    {
+                                        if (Logger.Helper.IsValidJson(Execute.Content))
+                                        {
+                                            var JSON = JsonConvert.DeserializeObject<IInventory>(Execute.Content);
+
+                                            if (JSON == null || JSON.Value == null)
+                                            {
+                                                Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
+                                            }
+                                            else
+                                            {
+                                                if (JSON.Success)
+                                                {
+                                                    return JSON.Value;
+                                                }
+                                                else
+                                                {
+                                                    Logger.LogGenericWarning($"Ошибка: {JSON.Message}");
+                                                }
+                                            }
+
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Logger.LogGenericWarning($"Ошибка: {Execute.Content}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                                    }
+                                }
+
+                                await Task.Delay(2500, Watcher.Source.Token);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                if (Auto.Developer.Debug)
+                                {
+                                    Logger.LogGenericDebug("Задача успешно отменена!");
+                                }
+
+                                break;
+                            }
+                            catch (ObjectDisposedException) { break; }
+                            catch (Exception e)
+                            {
+                                Logger.LogGenericException(e);
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (Auto.Developer.Debug)
+                    {
+                        Logger.LogGenericDebug("Задача успешно отменена!");
+                    }
+                }
+                catch (ObjectDisposedException) { }
+                catch (Exception e)
+                {
+                    Logger.LogGenericException(e);
+                }
+
+                return null;
+            }
+
+            #endregion
+
+            #region Render
+
+            public class IRender
+            {
+                public class IValue
+                {
+                    [JsonProperty("success", Required = Required.DisallowNull)]
+                    public bool Success { get; private set; }
+
+                    public class IResult
+                    {
+                        [JsonProperty("sell_price_text", Required = Required.DisallowNull)]
+                        public string? Price { get; set; }
+
+                        [JsonProperty("asset_description", Required = Required.DisallowNull)]
+                        public Steam.IDescription? Description { get; set; }
+                    }
+
+                    [JsonProperty("results", Required = Required.DisallowNull)]
+                    public List<IResult>? Result { get; set; }
+                }
+
+                [JsonProperty("Result", Required = Required.Always)]
+                public IValue Value { get; private set; } = new();
+
+                [JsonProperty(Required = Required.Always)]
+                public string Message { get; private set; } = "";
+
+                [JsonProperty(Required = Required.Always)]
+                public bool Success { get; private set; }
+            }
+
+            public async Task<IRender.IValue.IResult?> Render(IAuto.IWatcher Watcher, string MarketHashName, uint AppID = 0)
+            {
+                if (AppID == 0)
+                {
+                    AppID = Auto.AppID;
+                }
+
+                try
+                {
+                    ASF.Bot = await Bot(Watcher);
+
+                    Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                    if (ASF.Bot is not null && ASF.Bot.IsConnectedAndLoggedOn)
+                    {
+                        var Client = new RestClient(
+                            new RestClientOptions()
+                            {
+                                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
+                                MaxTimeout = 300000
+                            });
+
+                        var Request = new RestRequest($"{ASF.IP}/Api/Annex/{ASF.Index}/Render/{AppID}/{MarketHashName}");
+
+                        if (!string.IsNullOrEmpty(ASF.Password))
+                        {
+                            Request.AddHeader("Authentication", ASF.Password);
+                        }
+
+                        Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                        for (byte i = 0; i < 3; i++)
+                        {
+                            try
+                            {
+                                var Execute = await Client.ExecuteGetAsync(Request);
+
+                                Watcher.Source.Token.ThrowIfCancellationRequested();
+
+                                if ((int)Execute.StatusCode == 429)
+                                {
+                                    Logger.LogGenericWarning("Слишком много запросов!");
+
+                                    await Task.Delay(TimeSpan.FromMinutes(2.5), Watcher.Source.Token);
+
+                                    continue;
+                                }
+
+                                if (string.IsNullOrEmpty(Execute.Content))
+                                {
+                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
+                                    {
+                                        Logger.LogGenericWarning("Ответ пуст!");
+                                    }
+                                    else
+                                    {
+                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                                    }
+                                }
+                                else
+                                {
+                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
+                                    {
+                                        if (Logger.Helper.IsValidJson(Execute.Content))
+                                        {
+                                            var JSON = JsonConvert.DeserializeObject<IRender>(Execute.Content);
+
+                                            if (JSON == null || JSON.Value.Result == null)
+                                            {
+                                                Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
+                                            }
+                                            else
+                                            {
+                                                if (JSON.Success)
+                                                {
+                                                    foreach (var T in JSON.Value.Result)
+                                                    {
+                                                        return T;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Logger.LogGenericWarning($"Ошибка: {JSON.Message}");
+                                                }
+                                            }
+
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            Logger.LogGenericWarning($"Ошибка: {Execute.Content}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                                    }
+                                }
+
+                                await Task.Delay(2500, Watcher.Source.Token);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                if (Auto.Developer.Debug)
+                                {
+                                    Logger.LogGenericDebug("Задача успешно отменена!");
+                                }
+
+                                break;
+                            }
+                            catch (ObjectDisposedException) { break; }
+                            catch (Exception e)
+                            {
+                                Logger.LogGenericException(e);
+                            }
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    if (Auto.Developer.Debug)
+                    {
+                        Logger.LogGenericDebug("Задача успешно отменена!");
+                    }
+                }
+                catch (ObjectDisposedException) { }
+                catch (Exception e)
+                {
+                    Logger.LogGenericException(e);
+                }
+
+                return null;
+            }
+
+            #endregion
+
             #region Price
 
             public class IPrice
             {
-                public class IResult
+                public class IValue
                 {
                     [JsonProperty("lowest_price", Required = Required.Always)]
                     public string Price { get; private set; } = "";
@@ -1104,8 +1438,8 @@ namespace Granger
                     public bool Success { get; private set; }
                 }
 
-                [JsonProperty(Required = Required.DisallowNull)]
-                public IResult? Result { get; private set; }
+                [JsonProperty("Result", Required = Required.DisallowNull)]
+                public IValue? Value { get; private set; }
 
                 [JsonProperty(Required = Required.Always)]
                 public string Message { get; private set; } = "";
@@ -1181,7 +1515,7 @@ namespace Granger
                                         {
                                             var JSON = JsonConvert.DeserializeObject<IPrice>(Execute.Content);
 
-                                            if (JSON == null || JSON.Result == null)
+                                            if (JSON == null || JSON.Value == null)
                                             {
                                                 Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
                                             }
@@ -1189,11 +1523,11 @@ namespace Granger
                                             {
                                                 if (JSON.Success)
                                                 {
-                                                    if (JSON.Result.Success)
+                                                    if (JSON.Value.Success)
                                                     {
                                                         try
                                                         {
-                                                            return Helper.ToPrice(JSON.Result.Price, Auto.Config!.Steam.Culture);
+                                                            return Helper.ToPrice(JSON.Value.Price, Auto.Config!.Steam.Culture);
                                                         }
                                                         catch (FormatException)
                                                         {
@@ -1202,174 +1536,8 @@ namespace Granger
                                                     }
                                                     else
                                                     {
-                                                        Logger.LogGenericWarning($"Ошибка: {JSON.Result.Success}");
+                                                        Logger.LogGenericWarning($"Ошибка: {JSON.Value.Success}");
                                                     }
-                                                }
-                                                else
-                                                {
-                                                    Logger.LogGenericWarning($"Ошибка: {JSON.Message}");
-                                                }
-                                            }
-
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            Logger.LogGenericWarning($"Ошибка: {Execute.Content}");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                                    }
-                                }
-
-                                await Task.Delay(2500, Watcher.Source.Token);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                if (Auto.Developer.Debug)
-                                {
-                                    Logger.LogGenericDebug("Задача успешно отменена!");
-                                }
-
-                                break;
-                            }
-                            catch (ObjectDisposedException) { break; }
-                            catch (Exception e)
-                            {
-                                Logger.LogGenericException(e);
-                            }
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    if (Auto.Developer.Debug)
-                    {
-                        Logger.LogGenericDebug("Задача успешно отменена!");
-                    }
-                }
-                catch (ObjectDisposedException) { }
-                catch (Exception e)
-                {
-                    Logger.LogGenericException(e);
-                }
-
-                return null;
-            }
-
-            #endregion
-
-            #region Inventory
-
-            public class IInventory
-            {
-                public class IResult
-                {
-                    [JsonProperty("assets", Required = Required.DisallowNull)]
-                    public ImmutableList<Steam.IAsset>? Asset { get; private set; }
-
-                    [JsonProperty("descriptions", Required = Required.DisallowNull)]
-                    public ImmutableHashSet<Steam.IDescription>? Description { get; private set; }
-
-                    [JsonProperty("error", Required = Required.DisallowNull)]
-                    public string? Error { get; private set; }
-
-                    [JsonProperty("total_inventory_count", Required = Required.DisallowNull)]
-                    public int Count { get; private set; }
-
-                    [JsonProperty(Required = Required.DisallowNull)]
-                    public Steam.EResult Success { get; private set; }
-                }
-
-                [JsonProperty(Required = Required.DisallowNull)]
-                public IResult? Result { get; private set; }
-
-                [JsonProperty(Required = Required.Always)]
-                public string Message { get; private set; } = "";
-
-                [JsonProperty(Required = Required.Always)]
-                public bool Success { get; private set; }
-            }
-
-            public async Task<IInventory.IResult?> Inventory(IAuto.IWatcher Watcher, uint AppID = 0, ulong ContextID = 0)
-            {
-                if (AppID == 0 && ContextID == 0)
-                {
-                    AppID = Auto.AppID;
-                    ContextID = Auto.ContextID;
-                }
-
-                try
-                {
-                    ASF.Bot = await Bot(Watcher);
-
-                    Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                    if (ASF.Bot is not null && ASF.Bot.IsConnectedAndLoggedOn)
-                    {
-                        var Client = new RestClient(
-                            new RestClientOptions()
-                            {
-                                UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
-                                MaxTimeout = 300000
-                            });
-
-                        var Request = new RestRequest($"{ASF.IP}/Api/Annex/{ASF.Index}/Inventory/{AppID}/{ContextID}");
-
-                        if (!string.IsNullOrEmpty(ASF.Password))
-                        {
-                            Request.AddHeader("Authentication", ASF.Password);
-                        }
-
-                        Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                        for (byte i = 0; i < 3; i++)
-                        {
-                            try
-                            {
-                                var Execute = await Client.ExecuteGetAsync(Request);
-
-                                Watcher.Source.Token.ThrowIfCancellationRequested();
-
-                                if ((int)Execute.StatusCode == 429)
-                                {
-                                    Logger.LogGenericWarning("Слишком много запросов!");
-
-                                    await Task.Delay(TimeSpan.FromMinutes(2.5), Watcher.Source.Token);
-
-                                    continue;
-                                }
-
-                                if (string.IsNullOrEmpty(Execute.Content))
-                                {
-                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                                    {
-                                        Logger.LogGenericWarning("Ответ пуст!");
-                                    }
-                                    else
-                                    {
-                                        Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
-                                    }
-                                }
-                                else
-                                {
-                                    if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
-                                    {
-                                        if (Logger.Helper.IsValidJson(Execute.Content))
-                                        {
-                                            var JSON = JsonConvert.DeserializeObject<IInventory>(Execute.Content);
-
-                                            if (JSON == null || JSON.Result == null)
-                                            {
-                                                Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
-                                            }
-                                            else
-                                            {
-                                                if (JSON.Success)
-                                                {
-                                                    return JSON.Result;
                                                 }
                                                 else
                                                 {
@@ -1593,14 +1761,14 @@ namespace Granger
 
             public class ITwoFactorAuthenticationToken
             {
-                public class IDictionary
+                public class IValue
                 {
                     [JsonProperty(Required = Required.Always)]
                     public string Result { get; private set; } = "";
                 }
 
-                [JsonProperty(Required = Required.Always)]
-                public Dictionary<string, IDictionary> Result { get; private set; } = new();
+                [JsonProperty("Result", Required = Required.Always)]
+                public Dictionary<string, IValue> Value { get; private set; } = new();
 
                 [JsonProperty(Required = Required.Always)]
                 public string Message { get; private set; } = "";
@@ -1673,7 +1841,7 @@ namespace Granger
                                         {
                                             if (JSON.Success)
                                             {
-                                                foreach (var T in JSON.Result)
+                                                foreach (var T in JSON.Value)
                                                 {
                                                     return T.Value.Result;
                                                 }
@@ -1737,7 +1905,7 @@ namespace Granger
 
             public class ITwoFactorAuthenticationConfirmation
             {
-                public class IDictionary
+                public class IValue
                 {
                     public class IResult
                     {
@@ -1749,8 +1917,8 @@ namespace Granger
                     public List<IResult>? Result { get; private set; }
                 }
 
-                [JsonProperty(Required = Required.Always)]
-                public Dictionary<string, IDictionary> Result { get; private set; } = new();
+                [JsonProperty("Result", Required = Required.Always)]
+                public Dictionary<string, IValue> Value { get; private set; } = new();
 
                 [JsonProperty(Required = Required.Always)]
                 public string Message { get; private set; } = "";
@@ -1831,9 +1999,9 @@ namespace Granger
                                             {
                                                 if (JSON.Success)
                                                 {
-                                                    if (JSON.Result.ContainsKey(ASF.Index!))
+                                                    if (JSON.Value.ContainsKey(ASF.Index!))
                                                     {
-                                                        if (JSON.Result.TryGetValue(ASF.Index!, out var Value))
+                                                        if (JSON.Value.TryGetValue(ASF.Index!, out var Value))
                                                         {
                                                             if (Value.Result is not null)
                                                             {
@@ -2091,19 +2259,25 @@ namespace Granger
                                 {
                                     if (X.HasValue)
                                     {
-                                        var Date = DateTime.UtcNow.Date;
+                                        var Date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, X.Value.Day);
 
                                         int Hour = 4;
-                                        int Day = (DayOfWeek.Thursday - Date.DayOfWeek + 7) % 7;
+                                        int Day = (DayOfWeek.Wednesday - Date.DayOfWeek + 7) % 7;
 
-                                        var Value = Date.AddDays(Day).AddHours(Hour);
+                                        if (Day <= 0)
+                                        {
+                                            Day = 7;
+                                        }
 
-                                        if (DateTime.Now > Value)
+                                        Date = Date.AddDays(Day);
+                                        Date = Date.AddHours(Hour);
+
+                                        if (DateTime.Now > Date)
                                         {
                                             return null;
                                         }
 
-                                        return Value - DateTime.Now;
+                                        return Date - DateTime.Now;
                                     }
                                 }
                             }

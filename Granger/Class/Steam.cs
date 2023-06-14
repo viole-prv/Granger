@@ -59,24 +59,6 @@ namespace Granger
             public string? MarketHashName { get; set; }
         }
 
-        public class IRender
-        {
-            [JsonProperty("success", Required = Required.DisallowNull)]
-            public bool Success { get; private set; }
-
-            public class IResult
-            {
-                [JsonProperty("sell_price_text", Required = Required.DisallowNull)]
-                public string? Price { get; set; }
-
-                [JsonProperty("asset_description", Required = Required.DisallowNull)]
-                public IDescription? Description { get; set; }
-            }
-
-            [JsonProperty("results", Required = Required.DisallowNull)]
-            public List<IResult>? Result { get; set; }
-        }
-
         public enum ECurrency : byte
         {
             USD = 1,
