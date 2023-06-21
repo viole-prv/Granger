@@ -489,9 +489,8 @@
                                     TextWrapping="Wrap">
                                     <TextBlock.Style>
                                         <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
-                                            <Setter Property="Text" Value="{Binding Date.Launch, StringFormat=G}" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Type}" Value="CSGO">
+                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Sandbox}" Value="True">
                                                     <Setter Property="Text">
                                                         <Setter.Value>
                                                             <MultiBinding StringFormat="{}{0:00}.{1:00}:{2:00}">
@@ -501,6 +500,9 @@
                                                             </MultiBinding>
                                                         </Setter.Value>
                                                     </Setter>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Sandbox}" Value="False">
+                                                    <Setter Property="Text" Value="{Binding Date.Launch, StringFormat=G}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -612,7 +614,7 @@
                                     <StackPanel.Style>
                                         <Style TargetType="{x:Type StackPanel}">
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Exclude.Sort}" Value="True">
+                                                <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Animation.Sort}" Value="True">
                                                     <Setter Property="IsEnabled" Value="False" />
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -832,13 +834,15 @@
                                     <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Button
-                                    Grid.Column="0"
+                                <ToggleButton
                                     Height="27"
-                                    Click="Lobby_Click"
-                                    Content="LOBBY">
-                                    <Button.Style>
-                                        <Style BasedOn="{StaticResource Button}" TargetType="{x:Type Button}">
+                                    BorderBrush="LightGray"
+                                    BorderThickness="1"
+                                    Click="GameStateListener_Click"
+                                    Content="GAME STATE LISTENER"
+                                    IsChecked="{Binding GameStateListener.Enabled}">
+                                    <ToggleButton.Style>
+                                        <Style BasedOn="{StaticResource ToggleButton}" TargetType="{x:Type ToggleButton}">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Type}" Value="TF2">
                                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -848,8 +852,8 @@
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </Button.Style>
-                                </Button>
+                                    </ToggleButton.Style>
+                                </ToggleButton>
                                 <ToggleButton
                                     Height="27"
                                     BorderBrush="LightGray"
@@ -2008,7 +2012,7 @@
                                                 ToolTipService.IsEnabled="{Binding Name, Converter={StaticResource StringToBooleanConverter}}">
                                                 <i:Interaction.Triggers>
                                                     <i:EventTrigger EventName="MouseLeftButtonDown">
-                                                        <i:InvokeCommandAction Command="{Binding OnClick}" CommandParameter="True" />
+                                                        <i:InvokeCommandAction Command="{Binding OnClick}" />
                                                     </i:EventTrigger>
                                                 </i:Interaction.Triggers>
                                             </TextBlock>
@@ -2103,6 +2107,194 @@
                             </StackPanel>
                         </StackPanel>
                     </Grid>
+                </TabItem>
+                <TabItem
+                    Header="GAME STATE LISTENER"
+                    IsSelected="{Binding GameStateListener.Selected}"
+                    Visibility="{Binding GameStateListener.Enabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Margin="5,5,0,0">
+                        <Grid HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="25" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                Grid.Column="0"
+                                Height="27"
+                                Click="Lobby_Click"
+                                Content="LOBBY"
+                                Style="{StaticResource Button}" />
+                            <Button
+                                Grid.Column="2"
+                                Height="27"
+                                Click="Scoreboard_Click"
+                                Content="SCOREBOARD"
+                                Style="{StaticResource Button}" />
+                        </Grid>
+                        <Grid Height="125" Margin="0,10,0,0">
+                            <ListView
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                BorderThickness="0"
+                                IsTabStop="False"
+                                ItemsSource="{Binding Pop}"
+                                SelectionMode="Single"
+                                VirtualizingPanel.IsVirtualizing="True"
+                                VirtualizingPanel.VirtualizationMode="Recycling">
+                                <ListView.ItemContainerStyle>
+                                    <Style BasedOn="{StaticResource ListViewEmpty}" TargetType="{x:Type ListViewItem}">
+                                        <Setter Property="Focusable" Value="False" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid>
+                                                <Grid.Style>
+                                                    <Style TargetType="{x:Type Grid}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Progress}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="200" />
+                                                    <ColumnDefinition Width="20" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Style="{StaticResource TextBlock}"
+                                                    Text="{Binding Description}"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{Binding Color}"
+                                                    Style="{StaticResource TextBlock}"
+                                                    Text="{Binding Ping}">
+                                                    <i:Interaction.Triggers>
+                                                        <i:EventTrigger EventName="MouseLeftButtonDown">
+                                                            <i:InvokeCommandAction Command="{Binding OnUpdate}" />
+                                                        </i:EventTrigger>
+                                                    </i:Interaction.Triggers>
+                                                </TextBlock>
+                                                <ToggleButton
+                                                    Grid.Column="3"
+                                                    Height="28"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                                                    controls:ControlsHelper.FocusBorderBrush="Transparent"
+                                                    controls:ControlsHelper.FocusBorderThickness="0"
+                                                    controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                                                    Background="Transparent"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="0"
+                                                    Click="Pop_Click"
+                                                    IsChecked="{Binding Enabled}">
+                                                    <Image>
+                                                        <Image.Style>
+                                                            <Style TargetType="{x:Type Image}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Enabled}" Value="False">
+                                                                        <Setter Property="Source">
+                                                                            <Setter.Value>
+                                                                                <DrawingImage>
+                                                                                    <DrawingImage.Drawing>
+                                                                                        <DrawingGroup>
+                                                                                            <GeometryDrawing Brush="MediumPurple" Geometry="M405 448c23 0 43 -20 43 -43v-298c0 -23 -20 -43 -43 -43h-298c-23 0 -43 20 -43 43v298c0 23 20 43 43 43h298zM405 405h-298v-298h298v298z" />
+                                                                                        </DrawingGroup>
+                                                                                    </DrawingImage.Drawing>
+                                                                                </DrawingImage>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Enabled}" Value="True">
+                                                                        <Setter Property="Source">
+                                                                            <Setter.Value>
+                                                                                <DrawingImage>
+                                                                                    <DrawingImage.Drawing>
+                                                                                        <DrawingGroup>
+                                                                                            <GeometryDrawing Brush="MediumPurple" Geometry="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,5V19H5V5H19M10,17L6,13L7.41,11.58L10,14.17L16.59,7.58L18,9" />
+                                                                                        </DrawingGroup>
+                                                                                    </DrawingImage.Drawing>
+                                                                                </DrawingImage>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Enabled}" Value="{x:Null}">
+                                                                        <Setter Property="Source">
+                                                                            <Setter.Value>
+                                                                                <DrawingImage>
+                                                                                    <DrawingImage.Drawing>
+                                                                                        <DrawingGroup>
+                                                                                            <GeometryDrawing Brush="DarkGray" Geometry="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,5V19H5V5H19M10,17L6,13L7.41,11.58L10,14.17L16.59,7.58L18,9" />
+                                                                                        </DrawingGroup>
+                                                                                    </DrawingImage.Drawing>
+                                                                                </DrawingImage>
+                                                                            </Setter.Value>
+                                                                        </Setter>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Image.Style>
+                                                    </Image>
+                                                </ToggleButton>
+                                            </Grid>
+                                            <Grid Height="28">
+                                                <Grid.Style>
+                                                    <Style TargetType="{x:Type Grid}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Progress}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <controls:MetroProgressBar IsIndeterminate="True" />
+                                            </Grid>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                            <Grid
+                                Width="100"
+                                Background="White"
+                                DataContext="{Binding Progress.SDR}">
+                                <Grid.Style>
+                                    <Style TargetType="{x:Type Grid}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding .}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
+                                <controls:ProgressRing
+                                    Width="50"
+                                    IsActive="{Binding .}"
+                                    Visibility="{Binding ., Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <controls:ProgressRing.Style>
+                                        <Style>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding .}" Value="True">
+                                                    <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </controls:ProgressRing.Style>
+                                </controls:ProgressRing>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
                 </TabItem>
             </TabControl>
         </StackPanel>

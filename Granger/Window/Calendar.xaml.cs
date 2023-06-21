@@ -294,7 +294,7 @@ namespace Granger
                     }
                 }
 
-                Program.Auto.Exclude.Storage = Calendar.ICluster;
+                Program.Auto.Animation.Storage = Calendar.ICluster;
 
                 Program.IAuto.IInventory.Update();
             }
@@ -317,8 +317,8 @@ namespace Granger
 
             Program.IAuto.IInventory.Update();
 
-            Program.Auto.Exclude.Sort = false;
-            Program.Auto.Exclude.Storage = false;
+            Program.Auto.Animation.Sort = false;
+            Program.Auto.Animation.Storage = false;
         }
 
         private void MetroWindow_PreviewKeyDown(object sender, KeyEventArgs e)

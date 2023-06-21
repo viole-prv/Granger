@@ -60,7 +60,7 @@
                 <Button.Style>
                     <Style BasedOn="{StaticResource MahApps.Styles.Button.WindowCommands}" TargetType="{x:Type Button}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Exclude.Storage}" Value="True">
+                            <DataTrigger Binding="{Binding Animation.Storage}" Value="True">
                                 <Setter Property="IsEnabled" Value="False" />
                             </DataTrigger>
                         </Style.Triggers>
@@ -125,7 +125,7 @@
                 <Button.Style>
                     <Style BasedOn="{StaticResource MahApps.Styles.Button.WindowCommands}" TargetType="{x:Type Button}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Exclude.Storage}" Value="True">
+                            <DataTrigger Binding="{Binding Animation.Storage}" Value="True">
                                 <Setter Property="IsEnabled" Value="False" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Inventory.Tradable}" Value="{x:Null}">
@@ -221,7 +221,7 @@
                 <TextBox.Style>
                     <Style BasedOn="{StaticResource MahApps.Styles.TextBox}" TargetType="{x:Type TextBox}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding Exclude.Storage}" Value="True">
+                            <DataTrigger Binding="{Binding Animation.Storage}" Value="True">
                                 <Setter Property="IsEnabled" Value="False" />
                             </DataTrigger>
                         </Style.Triggers>

@@ -161,7 +161,7 @@ namespace GrangerServer
                                     {
                                         $"/C \"{Steam}\"",
                                         $"-login {Account.Login} {Account.Password}",
-                                        $"-applaunch {AppID} -console -novid -nosound -window", Convert.ToString(Value?.Data)
+                                        $"-vgui -applaunch {AppID} -console -novid -nosound -window", Convert.ToString(Value?.Data)
                                     })
                                 }
                             };

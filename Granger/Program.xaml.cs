@@ -4,18 +4,21 @@ using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using NetFwTypeLib;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
@@ -26,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using Viole_Logger_Interface;
 using Viole_Pipe;
 
@@ -43,6 +47,7 @@ namespace Granger
 
         private Calendar? Calendar;
         private Debugger? Debugger;
+        private Scoreboard? Scoreboard;
         private Seek? Seek;
         private Storage? Storage;
         private Watcher? Watcher;
@@ -70,16 +75,16 @@ namespace Granger
                     }
                 }
 
-                private bool _Server;
+                private bool _SDR;
 
-                public bool Server
+                public bool SDR
                 {
-                    get => _Server;
+                    get => _SDR;
                     set
                     {
-                        _Server = value;
+                        _SDR = value;
 
-                        NotifyPropertyChanged(nameof(Server));
+                        NotifyPropertyChanged(nameof(SDR));
                     }
                 }
 
@@ -207,9 +212,9 @@ namespace Granger
                 }
             }
 
-            #region Exclude
+            #region Animation
 
-            public class IExclude : INotifyPropertyChanged
+            public class IAnimation : INotifyPropertyChanged
             {
                 private bool _Sort;
 
@@ -246,16 +251,16 @@ namespace Granger
 
             }
 
-            private IExclude _Exclude = new();
+            private IAnimation _Animation = new();
 
-            public IExclude Exclude
+            public IAnimation Animation
             {
-                get => _Exclude;
+                get => _Animation;
                 set
                 {
-                    _Exclude = value;
+                    _Animation = value;
 
-                    NotifyPropertyChanged(nameof(Exclude));
+                    NotifyPropertyChanged(nameof(Animation));
                 }
             }
 
@@ -448,14 +453,14 @@ namespace Granger
                     {
                         case ISort.ESort.None:
                             Auto.Config.Storage = Auto.Config.Storage
-                                .Where(x => !Auto.Exclude.Storage || x.Visibility)
+                                .Where(x => !Auto.Animation.Storage || x.Visibility)
                                 .OrderBy(x => x.Login)
                                 .ToList();
 
                             break;
                         case ISort.ESort.Quantity:
                             Auto.Config.Storage = Auto.Config.Storage
-                                .Where(x => !Auto.Exclude.Storage || x.Visibility)
+                                .Where(x => !Auto.Animation.Storage || x.Visibility)
                                 .OrderBy(x => x.List.Count)
                                 .ToList();
 
@@ -463,14 +468,14 @@ namespace Granger
 
                         case ISort.ESort.Price:
                             Auto.Config.Storage = Auto.Config.Storage
-                                .Where(x => !Auto.Exclude.Storage || x.Visibility)
+                                .Where(x => !Auto.Animation.Storage || x.Visibility)
                                 .OrderBy(x => x.List.Sum(v => v.Value.Price))
                                 .ToList();
 
                             break;
                     }
 
-                    if (Auto.Exclude.Storage) return;
+                    if (Auto.Animation.Storage) return;
 
                     Auto.Config.Storage.ForEach(x =>
                         x.Cluster.ForEach(X =>
@@ -576,6 +581,32 @@ namespace Granger
 
             public class IGameStateListener : INotifyPropertyChanged
             {
+                private bool _Enabled;
+
+                public bool Enabled
+                {
+                    get => _Enabled;
+                    set
+                    {
+                        _Enabled = value;
+
+                        NotifyPropertyChanged(nameof(Enabled));
+                    }
+                }
+
+                private bool _Selected;
+
+                public bool Selected
+                {
+                    get => _Selected;
+                    set
+                    {
+                        _Selected = value;
+
+                        NotifyPropertyChanged(nameof(Selected));
+                    }
+                }
+
                 private GameStateListener? _Value;
 
                 public GameStateListener? Value
@@ -626,6 +657,93 @@ namespace Granger
 
                         NotifyPropertyChanged(nameof(GameOver));
                     }
+                }
+
+                private string? _Map;
+
+                public string? Map
+                {
+                    get => _Map;
+                    set
+                    {
+                        _Map = value;
+
+                        NotifyPropertyChanged(nameof(Map));
+                    }
+                }
+
+                private int _Round;
+
+                public int Round
+                {
+                    get => _Round;
+                    set
+                    {
+                        _Round = value;
+
+                        NotifyPropertyChanged(nameof(Round));
+                    }
+                }
+
+                private int _TeamCT;
+
+                public int TeamCT
+                {
+                    get => _TeamCT;
+                    set
+                    {
+                        _TeamCT = value;
+
+                        NotifyPropertyChanged(nameof(TeamCT));
+                    }
+                }
+
+                private int _TeamT;
+
+                public int TeamT
+                {
+                    get => _TeamT;
+                    set
+                    {
+                        _TeamT = value;
+
+                        NotifyPropertyChanged(nameof(TeamT));
+                    }
+                }
+
+                private int _Spectator;
+
+                public int Spectator
+                {
+                    get => _Spectator;
+                    set
+                    {
+                        _Spectator = value;
+
+                        NotifyPropertyChanged(nameof(Spectator));
+                    }
+                }
+
+                private int _Count;
+
+                public int Count
+                {
+                    get => _Count;
+                    set
+                    {
+                        _Count = value;
+
+                        NotifyPropertyChanged(nameof(Count));
+                    }
+                }
+
+                public void Reset()
+                {
+                    Map = null;
+                    Round = 0;
+                    TeamCT = 0;
+                    TeamT = 0;
+                    Spectator = 0;
                 }
 
                 public event PropertyChangedEventHandler? PropertyChanged;
@@ -1031,6 +1149,19 @@ namespace Granger
             }
 
             #endregion
+
+            private List<ISDR.IPop>? _Pop;
+
+            public List<ISDR.IPop>? Pop
+            {
+                get => _Pop;
+                set
+                {
+                    _Pop = value;
+
+                    NotifyPropertyChanged(nameof(Pop));
+                }
+            }
 
             public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1515,6 +1646,8 @@ namespace Granger
                                                         {
                                                             if (Auto.Inventory.Dictionary.TryGetValue(Description.MarketName, out var Dictionary))
                                                             {
+                                                                Account.Logger.LogGenericDebug($"Предмет \"{Description.MarketName}\" был успешно восстановлен!");
+
                                                                 T(Dictionary.Price);
                                                             }
                                                         }
@@ -1890,6 +2023,7 @@ namespace Granger
 
                 Calendar?.Close();
                 Debugger?.Close();
+                Scoreboard?.Close();
                 Seek?.Close();
                 Storage?.Close();
                 Watcher?.Close();
@@ -2909,18 +3043,41 @@ namespace Granger
             Element.IsEnabled = true;
         }
 
-        public static async void Sleep(IConfig.IAccount Account, IConfig.IAccount.IExclude.EValue Exclude, int Delay)
+        public static async void Sleep(IConfig.IAccount Account, IConfig.IAccount.IAnimation.EValue Animation, int Delay)
         {
-            if (Account.Exclude.Any(Exclude)) return;
+            if (Account.Animation.Any(Animation)) return;
 
-            Account.Exclude.Add(Exclude);
+            Account.Animation.Add(Animation);
             await Task.Delay(Delay);
-            Account.Exclude.Remove(Exclude);
+            Account.Animation.Remove(Animation);
         }
 
         #endregion
 
         #region Game State Listener
+
+        private void GameStateListener_Click(object sender, RoutedEventArgs e) => GameStateListener();
+
+        private void GameStateListener()
+        {
+            if (Auto.GameStateListener.Enabled)
+            {
+                if (Auto.GameStateListener.Value == null && StartGameStateListener())
+                {
+                    Logger.LogGenericWarning("Не удалось запустить GSI, закройте другую копию программы (Посмотрите в диспетчере задач, вкладка: \"подробнее\") и перезапустите программу.");
+
+                    Auto.GameStateListener.Enabled = false;
+                }
+                else
+                {
+                    SDR();
+                }
+            }
+            else
+            {
+                StopGameStateListener();
+            }
+        }
 
         private static void InitGameStateListener(IConfig.IAccount Account, bool X)
         {
@@ -3026,9 +3183,28 @@ namespace Granger
         {
             try
             {
-                if (string.IsNullOrEmpty(GameState.Map.Name) || string.IsNullOrEmpty(Auto.GameStateListener.Token)) return;
+                if (string.IsNullOrEmpty(GameState.Map.Name)) return;
 
-                if (GameState.Auth.Token == Auto.GameStateListener.Token)
+                var Account = Auto.Config!.AccountList.FirstOrDefault(x => x.Setup.SteamID.ToString() == GameState.Player.SteamID);
+
+                if (Account == null) return;
+
+                Auto.GameStateListener.Token = Account.Login;
+
+                Account.Bin.GameStateListener ??= new();
+
+                #region Game State Listener
+
+                Account.Bin.GameStateListener.Kill = GameState.Player.MatchStats.Kills;
+                Account.Bin.GameStateListener.Death = GameState.Player.MatchStats.Deaths;
+                Account.Bin.GameStateListener.Score = GameState.Player.MatchStats.Score;
+                Account.Bin.GameStateListener.Team = GameState.Player.Team;
+
+                Auto.Config.Update(IConfig.EUpdate.GameStateListener);
+
+                #endregion
+
+                if (Account.Login == Auto.GameStateListener.Token)
                 {
                     Logger.LogTrace(new
                     {
@@ -3046,6 +3222,15 @@ namespace Granger
 
                     switch (GameState.Map.Phase)
                     {
+                        case MapPhase.Live:
+                            Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
+                            Auto.GameStateListener.Round = GameState.Map.Round;
+                            Auto.GameStateListener.TeamCT = GameState.Map.TeamCT.Score;
+                            Auto.GameStateListener.TeamT = GameState.Map.TeamT.Score;
+                            Auto.GameStateListener.Spectator = GameState.Map.CurrentSpectators;
+
+                            return;
+
                         case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
                             Auto.GameStateListener.Warmup = true;
                             Auto.GameStateListener.GameOver = false;
@@ -3072,6 +3257,14 @@ namespace Granger
                                 Auto.Inventory.Keep = false;
                             }
 
+                            Auto.GameStateListener.Count++;
+                            Auto.GameStateListener.Reset();
+
+                            foreach (var X in Auto.Config.AccountList.Where(x => x.Bin.GameStateListener is not null))
+                            {
+                                X.Bin.GameStateListener = null;
+                            }
+
                             return;
                     }
                 }
@@ -3086,15 +3279,8 @@ namespace Granger
 
         private async void Lobby_Click(object sender, RoutedEventArgs e) => await Lobby();
 
-        private async Task Lobby()
+        private static async Task Lobby()
         {
-            if (Auto.GameStateListener.Value == null && StartGameStateListener())
-            {
-                Logger.LogGenericWarning("Не удалось запустить GSI, закройте другую копию программы (Посмотрите в диспетчере задач, вкладка: \"подробнее\") и перезапустите программу.");
-
-                return;
-            }
-
             var AccountList = Auto.Config!.AccountList
                 .Where(x => x.Bin.Launched)
                 .OrderBy(x => x.Bin.Location!.Index)
@@ -3274,6 +3460,413 @@ namespace Granger
 
             Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
             Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+        }
+
+        #endregion
+
+        #region Scoreboard
+
+        private void Scoreboard_Click(object sender, RoutedEventArgs e)
+        {
+            if (Scoreboard == null || Scoreboard.IsClosed)
+            {
+                Scoreboard = new Scoreboard(Auto);
+
+                Scoreboard.Show();
+            }
+            else
+            {
+                Scoreboard.Close();
+                Scoreboard = null;
+            }
+        }
+
+        #endregion
+
+        #region SDR
+
+        public class ISDR
+        {
+            public class IPop : INotifyPropertyChanged
+            {
+                public string? _Name;
+
+                [JsonIgnore]
+                public string? Name
+                {
+                    get => _Name;
+                    set
+                    {
+                        _Name = value;
+
+                        NotifyPropertyChanged(nameof(Name));
+                    }
+                }
+
+                [JsonProperty("desc")]
+                public string? Description { get; set; }
+
+                [JsonProperty("partners")]
+                public int Partner { get; set; }
+
+                #region Relay
+
+                public class IRelay
+                {
+                    [JsonProperty("ipv4")]
+                    public string? IP { get; set; }
+
+                    [JsonProperty("port_range")]
+                    public List<int>? Port { get; set; }
+                }
+
+                [JsonProperty("relays")]
+                public List<IRelay>? Relay { get; set; }
+
+                #endregion
+
+                public bool _Enabled;
+
+                [JsonIgnore]
+                public bool Enabled
+                {
+                    get => _Enabled;
+                    set
+                    {
+                        _Enabled = value;
+
+                        NotifyPropertyChanged(nameof(Enabled));
+                    }
+                }
+
+                public bool _Progress;
+
+                [JsonIgnore]
+                public bool Progress
+                {
+                    get => _Progress;
+                    set
+                    {
+                        _Progress = value;
+
+                        NotifyPropertyChanged(nameof(Progress));
+                    }
+                }
+
+                public long? _Ping;
+
+                [JsonIgnore]
+                public long? Ping
+                {
+                    get => _Ping;
+                    set
+                    {
+                        _Ping = value;
+
+                        NotifyPropertyChanged(nameof(Ping));
+                        NotifyPropertyChanged(nameof(Color));
+                    }
+                }
+
+                [JsonIgnore]
+                public Brush Color
+                {
+                    get
+                    {
+                        if (Ping.HasValue)
+                        {
+                            if (Ping > 100)
+                            {
+                                return Brushes.Red;
+                            }
+                            else if (Ping < 50)
+                            {
+                                return Brushes.Green;
+                            }
+
+                            return Brushes.Orange;
+                        }
+
+                        return Brushes.DarkRed;
+                    }
+                }
+
+                public async Task Pong(bool Progress = true)
+                {
+                    if (Progress)
+                    {
+                        this.Progress = true;
+                    }
+
+                    try
+                    {
+                        if (Relay is not null && Relay.Count > 0)
+                        {
+                            foreach (string? IP in Relay.Select(x => x.IP))
+                            {
+                                if (string.IsNullOrEmpty(IP)) continue;
+
+                                var Ping = new Ping();
+                                var Reply = await Ping.SendPingAsync(IP);
+
+                                this.Ping = Reply.RoundtripTime;
+
+                                break;
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (Progress)
+                        {
+                            await Task.Delay(2500);
+
+                            this.Progress = false;
+                        }
+                    }
+                }
+
+                #region Update
+
+                private ICommand? _OnUpdate;
+
+                public ICommand? OnUpdate
+                {
+                    get
+                    {
+                        return _OnUpdate ??= new RelayCommand(async _ => await Pong());
+                    }
+                }
+
+                #endregion
+
+                public event PropertyChangedEventHandler? PropertyChanged;
+
+                public void NotifyPropertyChanged(string? propertyName = null)
+                {
+                    PropertyChanged?.Invoke(this, new(propertyName));
+                }
+            }
+
+            [JsonProperty("pops")]
+            public Dictionary<string, IPop>? Pop { get; set; }
+        }
+
+        public static async void SDR()
+        {
+            try
+            {
+                Auto.Progress.SDR = true;
+
+                var Client = new RestClient(
+                    new RestClientOptions()
+                    {
+                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36",
+                        MaxTimeout = 300000
+                    });
+
+                var Request = new RestRequest("https://api.steampowered.com/ISteamApps/GetSDRConfig/v1?appid=730");
+
+                for (byte i = 0; i < 3; i++)
+                {
+                    try
+                    {
+                        var Execute = await Client.ExecuteGetAsync(Request);
+
+                        if ((int)Execute.StatusCode == 429)
+                        {
+                            Logger.LogGenericWarning("Слишком много запросов!");
+
+                            await Task.Delay(TimeSpan.FromMinutes(2.5));
+
+                            continue;
+                        }
+
+                        if (string.IsNullOrEmpty(Execute.Content))
+                        {
+                            if (Execute.StatusCode == HttpStatusCode.OK)
+                            {
+                                Logger.LogGenericWarning("Ответ пуст!");
+                            }
+                            else
+                            {
+                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                            }
+                        }
+                        else
+                        {
+                            if (Execute.StatusCode == 0 || Execute.StatusCode == HttpStatusCode.OK)
+                            {
+                                if (Logger.Helper.IsValidJson(Execute.Content))
+                                {
+                                    var JSON = JsonConvert.DeserializeObject<ISDR>(Execute.Content);
+
+                                    if (JSON == null || JSON.Pop == null)
+                                    {
+                                        Logger.LogGenericWarning($"Ошибка: {Execute.Content}.");
+                                    }
+                                    else
+                                    {
+                                        foreach (var Pair in JSON.Pop)
+                                        {
+                                            Pair.Value.Name = $"{nameof(Granger)}-{Pair.Key.ToUpper()}";
+
+                                            await Pair.Value.Pong(false);
+                                        }
+
+                                        Auto.Pop = JSON.Pop
+                                            .Select(x => x.Value)
+                                            .ToList();
+
+                                        var NetFwPolicy2 = INetFwPolicy2();
+
+                                        if (NetFwPolicy2 is not null)
+                                        {
+                                            foreach (var X in Auto.Pop)
+                                            {
+                                                if (string.IsNullOrEmpty(X.Name)) continue;
+
+                                                foreach (INetFwRule NetFwRule in NetFwPolicy2.Rules)
+                                                {
+                                                    if (NetFwRule.Name == X.Name)
+                                                    {
+                                                        X.Enabled = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    break;
+                                }
+                                else
+                                {
+                                    Logger.LogGenericWarning($"Ошибка: {Execute.Content}");
+                                }
+                            }
+                            else
+                            {
+                                Logger.LogGenericWarning($"Ошибка: {Execute.StatusCode}.");
+                            }
+                        }
+
+                        await Task.Delay(2500);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogGenericException(e);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogGenericException(e);
+            }
+            finally
+            {
+                Auto.Progress.SDR = false;
+            }
+        }
+
+        private void Pop_Click(object sender, RoutedEventArgs e)
+        {
+            var ToggleButton = sender as ToggleButton;
+
+            if (ToggleButton == null || ToggleButton.DataContext is not ISDR.IPop Pop) return;
+
+            if (Keyboard.IsKeyDown(Key.LeftCtrl))
+            {
+                if (Pop.Enabled)
+                {
+                    Pop.Enabled = false;
+
+                    foreach (var X in Auto.Pop!)
+                    {
+                        X.Enabled = true;
+
+                        Route(X);
+                    }
+                }
+                else
+                {
+                    Pop.Enabled = true;
+
+                    foreach (var X in Auto.Pop!)
+                    {
+                        X.Enabled = false;
+
+                        Route(X);
+                    }
+                }
+            }
+            else
+            {
+                Route(Pop);
+            }
+        }
+
+        private static INetFwPolicy2? INetFwPolicy2()
+        {
+            var FwPolicy2 = Type.GetTypeFromProgID("HNetCfg.FwPolicy2");
+
+            if (FwPolicy2 == null) return null;
+
+            if (Activator.CreateInstance(FwPolicy2) is not INetFwPolicy2 NetFwPolicy2) return null;
+
+            return NetFwPolicy2;
+        }
+
+        private static INetFwRule? INetFwRule()
+        {
+            var FWRule = Type.GetTypeFromProgID("HNetCfg.FWRule");
+
+            if (FWRule == null) return null;
+
+            if (Activator.CreateInstance(FWRule) is not INetFwRule NetFwRule) return null;
+
+            return NetFwRule;
+        }
+
+        private static void Route(ISDR.IPop Pop)
+        {
+            if (string.IsNullOrEmpty(Pop.Name)) return;
+
+            var NetFwPolicy2 = INetFwPolicy2();
+
+            if (NetFwPolicy2 is not null)
+            {
+                if (Pop.Enabled)
+                {
+                    if (Pop.Relay is not null && Pop.Relay.Count > 0)
+                    {
+                        var NetFwRule = INetFwRule();
+
+                        if (NetFwRule is not null)
+                        {
+                            NetFwRule.Enabled = true;
+                            NetFwRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+                            NetFwRule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
+
+                            NetFwRule.RemoteAddresses = string.Join(",", Pop.Relay.Select(x => x.IP));
+                            NetFwRule.Protocol = 17;
+                            NetFwRule.RemotePorts = "27015-27068";
+                            NetFwRule.Name = Pop.Name;
+
+                            NetFwPolicy2.Rules.Add(NetFwRule);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (INetFwRule NetFwRule in NetFwPolicy2.Rules)
+                    {
+                        if (NetFwRule.Name == Pop.Name)
+                        {
+                            NetFwPolicy2.Rules.Remove(Pop.Name);
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
@@ -3485,7 +4078,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -3498,42 +4091,10 @@ namespace Granger
                     {
                         if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
                         {
-                            var Date = new Date
-                            {
-                                Owner = this
-                            };
+                            var DialogResult = await this.ShowMessageAsync("Предупреждение", "Вы точно ходите обновить дату?", MessageDialogStyle.AffirmativeAndNegative, new() { DialogMessageFontSize = 17, AffirmativeButtonText = "Продолжить", NegativeButtonText = "Отмена", AnimateHide = true, AnimateShow = true, ColorScheme = MetroDialogColorScheme.Theme });
 
-                            if (Date.ShowDialog() ?? false)
+                            if (DialogResult == MessageDialogResult.Affirmative)
                             {
-                                if (Date.Auto.Value == Date.IAuto.EDate.Now)
-                                {
-                                    Account.Setup.Date.Drop[Auto.Type] = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
-                                        ? Account.Bin.Position.Value
-                                        : DateTime.Now;
-                                }
-                                else if (Date.Auto.Value == Date.IAuto.EDate.Reset)
-                                {
-                                    Account.Setup.Date.Drop[Auto.Type] = null;
-                                }
-                                else
-                                {
-                                    if (Account.Setup.Date.Drop.TryGetValue(Auto.Type, out var X) && X.HasValue)
-                                    {
-                                        if (Date.Auto.Value == Date.IAuto.EDate.Hour)
-                                        {
-                                            Account.Setup.Date.Drop[Auto.Type] = X.Value.AddHours(Date.Auto.Range);
-                                        }
-                                        else if (Date.Auto.Value == Date.IAuto.EDate.Day)
-                                        {
-                                            Account.Setup.Date.Drop[Auto.Type] = X.Value.AddDays(Date.Auto.Range);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        Account.Setup.Date.Drop[Auto.Type] = DateTime.Now;
-                                    }
-                                }
-
                                 Sort();
                             }
                         }
@@ -3589,7 +4150,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -4154,7 +4715,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -4186,7 +4747,7 @@ namespace Granger
                                 {
                                     var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config!.Resolution);
 
-                                    const byte VIDEO_MODE_LINE = 52;
+                                    const byte VIDEO_MODE_LINE = 84;
 
                                     if (Resolution == null || !await SetVideoMode(CONFIG, VIDEO_MODE_LINE, Resolution.Dimension)) return false;
                                 }
@@ -4453,7 +5014,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -4462,7 +5023,7 @@ namespace Granger
 
                 Pipe.Set(Account.Login, "QUIT");
 
-                Account.Exclude.Add(IConfig.IAccount.IExclude.EValue.Close);
+                Account.Animation.Add(IConfig.IAccount.IAnimation.EValue.Close);
 
                 if (Account.ShouldSerializeASF())
                 {
@@ -4627,7 +5188,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -4663,7 +5224,7 @@ namespace Granger
 
             try
             {
-                if (Account.Exclude.Any(IConfig.IAccount.IExclude.EValue.Close))
+                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
                 {
                     Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
 
@@ -4955,6 +5516,8 @@ namespace Granger
                                                 {
                                                     if (Auto.Inventory.Dictionary.TryGetValue(Description.MarketName, out var Dictionary))
                                                     {
+                                                        Account.Logger.LogGenericDebug($"Предмет \"{Description.MarketName}\" был успешно восстановлен!");
+
                                                         await T(Dictionary.Price);
                                                     }
                                                 }

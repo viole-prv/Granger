@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using CSGSI.Nodes;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using RestSharp;
 using System;
@@ -2336,9 +2337,9 @@ namespace Granger
 
             #endregion
 
-            #region Exclude
+            #region Animation
 
-            public class IExclude
+            public class IAnimation
             {
                 public enum EValue : byte
                 {
@@ -2374,7 +2375,7 @@ namespace Granger
             }
 
             [JsonIgnore]
-            public IExclude Exclude { get; set; } = new();
+            public IAnimation Animation { get; set; } = new();
 
             #endregion
 
@@ -2456,6 +2457,90 @@ namespace Granger
                 }
 
                 public bool ShouldSerializePosition() => !Position.Equals(default(KeyValuePair<EPosition, DateTime>));
+
+                #region Game State Listener
+
+                public class IGameStateListener : INotifyPropertyChanged
+                {
+                    private int _Kill;
+
+                    [JsonProperty]
+                    public int Kill
+                    {
+                        get => _Kill;
+                        set
+                        {
+                            _Kill = value;
+
+                            NotifyPropertyChanged(nameof(Kill));
+                        }
+                    }
+
+                    private int _Death;
+
+                    [JsonProperty]
+                    public int Death
+                    {
+                        get => _Death;
+                        set
+                        {
+                            _Death = value;
+
+                            NotifyPropertyChanged(nameof(Death));
+                        }
+                    }
+
+                    private int _Score;
+
+                    [JsonProperty]
+                    public int Score
+                    {
+                        get => _Score;
+                        set
+                        {
+                            _Score = value;
+
+                            NotifyPropertyChanged(nameof(Score));
+                        }
+                    }
+
+                    private PlayerTeam? _Team;
+
+                    [JsonProperty]
+                    public PlayerTeam? Team
+                    {
+                        get => _Team;
+                        set
+                        {
+                            _Team = value;
+
+                            NotifyPropertyChanged(nameof(Team));
+                        }
+                    }
+
+                    public event PropertyChangedEventHandler? PropertyChanged;
+
+                    private void NotifyPropertyChanged(string? propertyName = null)
+                    {
+                        PropertyChanged?.Invoke(this, new(propertyName));
+                    }
+                }
+
+                private IGameStateListener? _GameStateListener;
+
+                [JsonIgnore]
+                public IGameStateListener? GameStateListener
+                {
+                    get => _GameStateListener;
+                    set
+                    {
+                        _GameStateListener = value;
+
+                        NotifyPropertyChanged(nameof(GameStateListener));
+                    }
+                }
+
+                #endregion
 
                 #region Window
 
@@ -2739,6 +2824,7 @@ namespace Granger
 
                     Position = default;
 
+                    GameStateListener = null;
                     Window = null;
                     Location = null;
 
@@ -2819,7 +2905,7 @@ namespace Granger
 
                                 if (Line == "EXIT")
                                 {
-                                    Account.Exclude.Any(IExclude.EValue.Close, true);
+                                    Account.Animation.Any(IAnimation.EValue.Close, true);
 
                                     if (Account.Bin.Location is not null && Auto.Location is not null)
                                     {
@@ -2904,7 +2990,7 @@ namespace Granger
                                                 Process.EnableRaisingEvents = true;
                                                 Process.Exited += (sender, args) =>
                                                 {
-                                                    if (Account.Exclude.Any(IExclude.EValue.Close)) return;
+                                                    if (Account.Animation.Any(IAnimation.EValue.Close)) return;
 
                                                     Account.Bin.Condition = 3;
                                                     Account.Update();
@@ -3510,10 +3596,11 @@ namespace Granger
         public enum EUpdate : byte
         {
             Storage,
-            Audit
+            Audit,
+            GameStateListener
         }
 
-        public bool Update(params EUpdate[] _)
+        public void Update(params EUpdate[] _)
         {
             if (_.Contains(EUpdate.Storage))
             {
@@ -3556,7 +3643,31 @@ namespace Granger
                 NotifyPropertyChanged(nameof(Revise));
             }
 
-            return Storage.Count > 0;
+            if (_.Contains(EUpdate.GameStateListener))
+            {
+                NotifyPropertyChanged(nameof(TeamCT));
+                NotifyPropertyChanged(nameof(TeamT));
+            }
+        }
+
+        [JsonIgnore]
+        public List<Tuple<string, IAccount.IBin.IGameStateListener>> TeamCT
+        {
+            get => AccountList
+                .Where(x => x.Bin.GameStateListener is not null)
+                .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.CT)
+                .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
+                .ToList();
+        }
+
+        [JsonIgnore]
+        public List<Tuple<string, IAccount.IBin.IGameStateListener>> TeamT
+        {
+            get => AccountList
+                .Where(x => x.Bin.GameStateListener is not null)
+                .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.T)
+                .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
+                .ToList();
         }
 
         public static (string? ErrorMessage, IConfig? Config) Load(string Directory, string _File)
