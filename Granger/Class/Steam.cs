@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace Granger
 {
@@ -58,6 +59,73 @@ namespace Granger
             [JsonProperty("market_hash_name")]
             public string? MarketHashName { get; set; }
         }
+
+        public static readonly byte COMPETITIVE = 6;
+
+        public static readonly Bitmap[] Competitive = new[]
+        {
+            Properties.Resources.Unranked,
+            Properties.Resources.Silver_1,
+            Properties.Resources.Silver_2,
+            Properties.Resources.Silver_3,
+            Properties.Resources.Silver_4,
+            Properties.Resources.Silver_5,
+            Properties.Resources.Silver_6,
+            Properties.Resources.Gold_Nova_1,
+            Properties.Resources.Gold_Nova_2,
+            Properties.Resources.Gold_Nova_3,
+            Properties.Resources.Gold_Nova_4,
+            Properties.Resources.Master_Guardian_1,
+            Properties.Resources.Master_Guardian_2,
+            Properties.Resources.Master_Guardian_3,
+            Properties.Resources.Distinguished_Master_Guardian,
+            Properties.Resources.Legendary_Eagle,
+            Properties.Resources.Legendary_Eagle_Master,
+            Properties.Resources.Supreme_Master_First_Class,
+            Properties.Resources.Global_Elite
+        };
+
+        public static readonly Bitmap[] Profile = new[]
+        {
+            Properties.Resources.Recruit_Rank_1,
+            Properties.Resources.Recruit_Rank_2,
+            Properties.Resources.Recruit_Rank_3,
+            Properties.Resources.Recruit_Rank_4,
+            Properties.Resources.Corporal_Rank_5,
+            Properties.Resources.Corporal_Rank_6,
+            Properties.Resources.Corporal_Rank_7,
+            Properties.Resources.Corporal_Rank_8,
+            Properties.Resources.Sergeant_Rank_9,
+            Properties.Resources.Sergeant_Rank_10,
+            Properties.Resources.Sergeant_Rank_11,
+            Properties.Resources.Sergeant_Rank_12,
+            Properties.Resources.Master_Sergeant_Rank_13,
+            Properties.Resources.Master_Sergeant_Rank_14,
+            Properties.Resources.Master_Sergeant_Rank_15,
+            Properties.Resources.Master_Sergeant_Rank_16,
+            Properties.Resources.Sergeant_Major_Rank_17,
+            Properties.Resources.Sergeant_Major_Rank_18,
+            Properties.Resources.Sergeant_Major_Rank_19,
+            Properties.Resources.Sergeant_Major_Rank_20,
+            Properties.Resources.Lieutenant_Rank_21,
+            Properties.Resources.Lieutenant_Rank_22,
+            Properties.Resources.Lieutenant_Rank_23,
+            Properties.Resources.Lieutenant_Rank_24,
+            Properties.Resources.Captain_Rank_26,
+            Properties.Resources.Captain_Rank_27,
+            Properties.Resources.Captain_Rank_28,
+            Properties.Resources.Major_Rank_30,
+            Properties.Resources.Major_Rank_31,
+            Properties.Resources.Major_Rank_32,
+            Properties.Resources.Colonel_Rank_33,
+            Properties.Resources.Colonel_Rank_34,
+            Properties.Resources.Colonel_Rank_35,
+            Properties.Resources.Brigadier_General_Rank_36,
+            Properties.Resources.Major_General_Rank_37,
+            Properties.Resources.Lieutenant_General_Rank_38,
+            Properties.Resources.General_Rank_39,
+            Properties.Resources.Global_General_Rank_40
+        };
 
         public enum ECurrency : byte
         {

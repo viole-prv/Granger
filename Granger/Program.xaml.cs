@@ -685,6 +685,32 @@ namespace Granger
                     }
                 }
 
+                private RoundPhase _RoundPhase;
+
+                public RoundPhase Phase
+                {
+                    get => _RoundPhase;
+                    set
+                    {
+                        _RoundPhase = value;
+
+                        NotifyPropertyChanged(nameof(Phase));
+                    }
+                }
+
+                private int _Spectator;
+
+                public int Spectator
+                {
+                    get => _Spectator;
+                    set
+                    {
+                        _Spectator = value;
+
+                        NotifyPropertyChanged(nameof(Spectator));
+                    }
+                }
+
                 private int _TeamCT;
 
                 public int TeamCT
@@ -708,19 +734,6 @@ namespace Granger
                         _TeamT = value;
 
                         NotifyPropertyChanged(nameof(TeamT));
-                    }
-                }
-
-                private int _Spectator;
-
-                public int Spectator
-                {
-                    get => _Spectator;
-                    set
-                    {
-                        _Spectator = value;
-
-                        NotifyPropertyChanged(nameof(Spectator));
                     }
                 }
 
@@ -3191,16 +3204,18 @@ namespace Granger
 
                 Auto.GameStateListener.Token = Account.Login;
 
-                Account.Bin.GameStateListener ??= new();
-
                 #region Game State Listener
 
                 Account.Bin.GameStateListener.Kill = GameState.Player.MatchStats.Kills;
                 Account.Bin.GameStateListener.Death = GameState.Player.MatchStats.Deaths;
                 Account.Bin.GameStateListener.Score = GameState.Player.MatchStats.Score;
-                Account.Bin.GameStateListener.Team = GameState.Player.Team;
 
-                Auto.Config.Update(IConfig.EUpdate.GameStateListener);
+                if (Account.Bin.GameStateListener.Team != GameState.Player.Team)
+                {
+                    Account.Bin.GameStateListener.Reset(GameState.Player.Team);
+
+                    Auto.Config.Update(IConfig.EUpdate.GameStateListener);
+                }
 
                 #endregion
 
@@ -3225,9 +3240,10 @@ namespace Granger
                         case MapPhase.Live:
                             Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
                             Auto.GameStateListener.Round = GameState.Map.Round;
+                            Auto.GameStateListener.Phase = GameState.Round.Phase;
+                            Auto.GameStateListener.Spectator = GameState.Map.CurrentSpectators;
                             Auto.GameStateListener.TeamCT = GameState.Map.TeamCT.Score;
                             Auto.GameStateListener.TeamT = GameState.Map.TeamT.Score;
-                            Auto.GameStateListener.Spectator = GameState.Map.CurrentSpectators;
 
                             return;
 
@@ -3260,9 +3276,9 @@ namespace Granger
                             Auto.GameStateListener.Count++;
                             Auto.GameStateListener.Reset();
 
-                            foreach (var X in Auto.Config.AccountList.Where(x => x.Bin.GameStateListener is not null))
+                            foreach (var X in Auto.Config.AccountList.Where(x => x.Bin.Launched))
                             {
-                                X.Bin.GameStateListener = null;
+                                X.Bin.GameStateListener.Reset();
                             }
 
                             return;
@@ -3579,12 +3595,12 @@ namespace Granger
                             {
                                 return Brushes.Red;
                             }
-                            else if (Ping < 50)
+                            else if (Ping > 50)
                             {
-                                return Brushes.Green;
+                                return Brushes.Orange;
                             }
 
-                            return Brushes.Orange;
+                            return Brushes.Green;
                         }
 
                         return Brushes.DarkRed;
@@ -3600,19 +3616,17 @@ namespace Granger
 
                     try
                     {
-                        if (Relay is not null && Relay.Count > 0)
+                        foreach (string? IP in Relay!.Select(x => x.IP))
                         {
-                            foreach (string? IP in Relay.Select(x => x.IP))
-                            {
-                                if (string.IsNullOrEmpty(IP)) continue;
+                            if (string.IsNullOrEmpty(IP)) continue;
 
-                                var Ping = new Ping();
-                                var Reply = await Ping.SendPingAsync(IP);
+                            var Ping = new Ping();
 
-                                this.Ping = Reply.RoundtripTime;
+                            var _ = await Ping.SendPingAsync(IP);
 
-                                break;
-                            }
+                            this.Ping = _.RoundtripTime;
+
+                            break;
                         }
                     }
                     finally
@@ -3709,6 +3723,8 @@ namespace Granger
                                     {
                                         foreach (var Pair in JSON.Pop)
                                         {
+                                            if (Pair.Value.Relay == null || Pair.Value.Relay.Count == 0) continue;
+
                                             Pair.Value.Name = $"{nameof(Granger)}-{Pair.Key.ToUpper()}";
 
                                             await Pair.Value.Pong(false);
@@ -3716,6 +3732,7 @@ namespace Granger
 
                                         Auto.Pop = JSON.Pop
                                             .Select(x => x.Value)
+                                            .Where(x => x.Ping is not null)
                                             .ToList();
 
                                         var NetFwPolicy2 = INetFwPolicy2();
@@ -3837,23 +3854,20 @@ namespace Granger
             {
                 if (Pop.Enabled)
                 {
-                    if (Pop.Relay is not null && Pop.Relay.Count > 0)
+                    var NetFwRule = INetFwRule();
+
+                    if (NetFwRule is not null)
                     {
-                        var NetFwRule = INetFwRule();
+                        NetFwRule.Enabled = true;
+                        NetFwRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
+                        NetFwRule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
 
-                        if (NetFwRule is not null)
-                        {
-                            NetFwRule.Enabled = true;
-                            NetFwRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                            NetFwRule.Action = NET_FW_ACTION_.NET_FW_ACTION_BLOCK;
+                        NetFwRule.RemoteAddresses = string.Join(",", Pop.Relay!.Select(x => x.IP));
+                        NetFwRule.Protocol = 17;
+                        NetFwRule.RemotePorts = "27015-27068";
+                        NetFwRule.Name = Pop.Name;
 
-                            NetFwRule.RemoteAddresses = string.Join(",", Pop.Relay.Select(x => x.IP));
-                            NetFwRule.Protocol = 17;
-                            NetFwRule.RemotePorts = "27015-27068";
-                            NetFwRule.Name = Pop.Name;
-
-                            NetFwPolicy2.Rules.Add(NetFwRule);
-                        }
+                        NetFwPolicy2.Rules.Add(NetFwRule);
                     }
                 }
                 else

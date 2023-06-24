@@ -16,10 +16,16 @@
             <TextBlock
                 Margin="14,0,0,0"
                 VerticalAlignment="Center"
-                FontSize="15">
+                FontSize="15"
+                Visibility="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Map, Converter={StaticResource StringToVisibilityConverter}}">
                 <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Map}" />
-                <Run Text="-" />
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Count}" />
+                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Count, StringFormat='{}({0})'}" />
+                <Run Text="| ROUND:" />
+                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Round}" />
+                <Run Text="| PHASE:" />
+                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Phase}" />
+                <Run Text="| SPECTATOR:" />
+                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Spectator}" />
             </TextBlock>
         </ItemContainerTemplate>
     </controls:MetroWindow.TitleTemplate>

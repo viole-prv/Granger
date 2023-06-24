@@ -650,8 +650,7 @@ namespace Granger
 
             public enum EUpdate : byte
             {
-                Bin,
-                Server
+                Bin
             }
 
             public void Update(EUpdate Update = EUpdate.Bin)
@@ -2311,6 +2310,183 @@ namespace Granger
 
                 public bool ShouldSerializeDate() => Date.ShouldSerializeLaunch() || Date.ShouldSerializeDrop();
 
+                public class IData : INotifyPropertyChanged
+                {
+                    private int _Rank;
+
+                    [JsonProperty]
+                    public int Rank
+                    {
+                        get => _Rank;
+                        set
+                        {
+                            _Rank = value;
+
+                            NotifyPropertyChanged(nameof(Rank));
+                        }
+                    }
+
+                    public bool ShouldSerializeRank() => Rank > 0;
+
+                    private int? _Win;
+
+                    [JsonProperty]
+                    public int? Win
+                    {
+                        get => _Win;
+                        set
+                        {
+                            _Win = value;
+
+                            NotifyPropertyChanged(nameof(Win));
+                        }
+                    }
+
+                    public bool ShouldSerializeWin() => Win.HasValue;
+
+                    private int _Level = 1;
+
+                    [JsonProperty]
+                    public int Level
+                    {
+                        get => _Level;
+                        set
+                        {
+                            _Level = value;
+
+                            NotifyPropertyChanged(nameof(Level));
+
+                            NotifyPropertyChanged(nameof(Image1));
+                            NotifyPropertyChanged(nameof(Image2));
+                        }
+                    }
+
+                    public bool ShouldSerializeLevel() => Level > 1;
+
+                    [JsonIgnore]
+                    public BitmapImage? Image1
+                    {
+                        get
+                        {
+                            int T = Level;
+
+                            if (Level > 0)
+                            {
+                                T -= 1;
+                            }
+
+                            return Helper.ImageConvert(Granger.Steam.Profile[T]);
+                        }
+                    }
+
+                    [JsonIgnore]
+                    public BitmapImage? Image2
+                    {
+                        get
+                        {
+                            int T = Level;
+
+                            if (Level > 0)
+                            {
+                                T -= 1;
+                            }
+
+                            return Helper.ImageConvert(Granger.Steam.Profile[Level == 40 ? 0 : T + 1]);
+                        }
+                    }
+
+                    private long _XP;
+
+                    [JsonProperty]
+                    public long XP
+                    {
+                        get => _XP;
+                        set
+                        {
+                            _XP = value;
+
+                            NotifyPropertyChanged(nameof(XP));
+                            NotifyPropertyChanged(nameof(Foreground));
+                        }
+                    }
+
+                    public bool ShouldSerializeXP() => XP > 0;
+
+                    private long _NEW = 500;
+
+                    [JsonIgnore]
+                    public long NEW
+                    {
+                        get => _NEW;
+                        set
+                        {
+                            _NEW = value;
+
+                            NotifyPropertyChanged(nameof(NEW));
+                            NotifyPropertyChanged(nameof(Foreground));
+                        }
+                    }
+
+                    [JsonIgnore]
+                    public LinearGradientBrush Foreground
+                    {
+                        get
+                        {
+                            var T = new LinearGradientBrush
+                            {
+                                StartPoint = new System.Windows.Point(0, 1),
+                                EndPoint = new System.Windows.Point(1, 0)
+                            };
+
+                            T.GradientStops.Add(new GradientStop(Colors.LightSteelBlue, 0));
+                            T.GradientStops.Add(new GradientStop(Colors.LightSteelBlue, 0.8));
+                            T.GradientStops.Add(new GradientStop(NEW == 0 ? Colors.LightSteelBlue : Colors.Lime, 0.8));
+                            T.GradientStops.Add(new GradientStop(NEW == 0 ? Colors.LightSteelBlue : Colors.Lime, 1));
+
+                            return T;
+                        }
+                    }
+
+                    private bool? _Prime;
+
+                    [JsonProperty]
+                    public bool? Prime
+                    {
+                        get => _Prime;
+                        set
+                        {
+                            _Prime = value;
+
+                            NotifyPropertyChanged(nameof(Prime));
+                        }
+                    }
+
+                    public bool ShouldSerializePrime() => Prime.HasValue;
+
+                    public event PropertyChangedEventHandler? PropertyChanged;
+
+                    private void NotifyPropertyChanged(string? propertyName = null)
+                    {
+                        PropertyChanged?.Invoke(this, new(propertyName));
+                    }
+                }
+
+                private IData _Data = new();
+
+                [JsonProperty]
+                public IData Data
+                {
+                    get => _Data;
+                    set
+                    {
+                        _Data = value;
+
+                        NotifyPropertyChanged(nameof(Data));
+                    }
+                }
+
+                public bool ShouldSerializeData() => Data.ShouldSerializeRank() || Data.ShouldSerializeWin() || Data.ShouldSerializeLevel() || Data.ShouldSerializeXP() || Data.ShouldSerializePrime();
+
                 public event PropertyChangedEventHandler? PropertyChanged;
 
                 private void NotifyPropertyChanged(string? propertyName = null)
@@ -2518,6 +2694,15 @@ namespace Granger
                         }
                     }
 
+                    public void Reset(PlayerTeam? Team = null)
+                    {
+                        Kill = 0;
+                        Death = 0;
+                        Score = 0;
+
+                        this.Team = Team;
+                    }
+
                     public event PropertyChangedEventHandler? PropertyChanged;
 
                     private void NotifyPropertyChanged(string? propertyName = null)
@@ -2526,10 +2711,10 @@ namespace Granger
                     }
                 }
 
-                private IGameStateListener? _GameStateListener;
+                private IGameStateListener _GameStateListener = new();
 
                 [JsonIgnore]
-                public IGameStateListener? GameStateListener
+                public IGameStateListener GameStateListener
                 {
                     get => _GameStateListener;
                     set
@@ -2824,7 +3009,7 @@ namespace Granger
 
                     Position = default;
 
-                    GameStateListener = null;
+                    GameStateListener.Reset();
                     Window = null;
                     Location = null;
 
@@ -3011,6 +3196,9 @@ namespace Granger
                                     {
                                         Account.Bin.Position = new(IBin.EPosition.IN_GAME, DateTime.Now);
                                         Account.Update();
+
+                                        Account.Bin.GameStateListener.Reset();
+                                        Auto.Config!.Update(IConfig.EUpdate.GameStateListener);
                                     }
                                 }
                                 else if (Line == "MAIN_MENU")
@@ -3019,22 +3207,10 @@ namespace Granger
                                     {
                                         Account.Bin.Position = new(IBin.EPosition.MAIN_MENU, DateTime.Now);
                                         Account.Update();
+
+                                        Account.Bin.GameStateListener.Reset();
+                                        Auto.Config!.Update(IConfig.EUpdate.GameStateListener);
                                     }
-                                }
-                                else if (Line == "REJECT_BAD_PASSWORD")
-                                {
-                                    Account.Logger.LogGenericWarning("Неправильный пароль.");
-
-                                    Account.Update(EUpdate.Server);
-                                }
-
-                                else if (Line == "REJECT_SERVER_FULL")
-                                {
-                                    Account.Logger.LogGenericWarning("Сервер заполнен.");
-                                }
-                                else if (Line == "REJECT_CONNECT_FROM_LOBBY")
-                                {
-                                    Account.Logger.LogGenericWarning("Отклонено подключение из лобби.");
                                 }
                                 else if (Logger.Helper.IsValidJson(Line))
                                 {
@@ -3042,18 +3218,18 @@ namespace Granger
 
                                     if (Dynamic?.Data is not null)
                                     {
-                                        string _Type = Convert.ToString(Dynamic.Type);
-                                        string _Data = Convert.ToString(Dynamic.Data);
+                                        string _TYPE = Convert.ToString(Dynamic.Type);
+                                        string _DATA = Convert.ToString(Dynamic.Data);
 
-                                        if (!string.IsNullOrEmpty(_Data))
+                                        if (!string.IsNullOrEmpty(_DATA))
                                         {
-                                            if (_Type == "BIN")
+                                            if (_TYPE == "BIN")
                                             {
-                                                var _Bin = JsonConvert.DeserializeObject<IBin>(_Data);
+                                                var _BIN = JsonConvert.DeserializeObject<IBin>(_DATA);
 
-                                                if (_Bin is not null)
+                                                if (_BIN is not null)
                                                 {
-                                                    Account.Bin = _Bin;
+                                                    Account.Bin = _BIN;
 
                                                     if (Account.Bin.Location is not null && Auto.Location is not null)
                                                     {
@@ -3065,6 +3241,60 @@ namespace Granger
                                                             }
                                                         }
                                                     }
+                                                }
+                                            }
+                                            else if (_TYPE == "MACHINE")
+                                            {
+                                                var _MACHINE = JsonConvert.DeserializeObject<IMACHINE>(_DATA);
+
+                                                if (_MACHINE is not null)
+                                                {
+                                                    if (_MACHINE.RANK.HasValue)
+                                                    {
+                                                        Account.Setup.Data.Rank = _MACHINE.RANK.Value;
+                                                    }
+
+                                                    if (_MACHINE.WIN.HasValue)
+                                                    {
+                                                        if (_MACHINE.RANK_TYPE == Granger.Steam.COMPETITIVE)
+                                                        {
+                                                            Account.Setup.Data.Win = _MACHINE.WIN.Value;
+                                                        }
+                                                    }
+
+                                                    if (_MACHINE.LEVEL.HasValue)
+                                                    {
+                                                        Account.Setup.Data.Level = _MACHINE.LEVEL.Value;
+                                                    }
+
+                                                    if (_MACHINE.XP.HasValue)
+                                                    {
+                                                        if (Account.Setup.Data.ShouldSerializeXP())
+                                                        {
+                                                            long NEW = _MACHINE.XP.Value;
+                                                            long OLD = Account.Setup.Data.XP;
+
+                                                            long _ = Math.Abs(NEW - OLD);
+
+                                                            if (NEW < OLD)
+                                                            {
+                                                                _ = Math.Abs(5000 - OLD + NEW);
+                                                            }
+
+                                                            Account.Setup.Data.NEW = _ > 0
+                                                                ? _
+                                                                : 0;
+                                                        }
+
+                                                        Account.Setup.Data.XP = _MACHINE.XP.Value;
+                                                    }
+
+                                                    if (_MACHINE.PRIME.HasValue)
+                                                    {
+                                                        Account.Setup.Data.Prime = _MACHINE.PRIME.Value;
+                                                    }
+
+                                                    Auto.Config!.Save();
                                                 }
                                             }
                                             else
@@ -3093,6 +3323,135 @@ namespace Granger
                     {
                         Account.Logger.LogGenericException(e);
                     }
+                }
+
+                public class IMACHINE
+                {
+                    #region RANK
+
+                    [JsonProperty(nameof(RANK))]
+                    public string? I_RANK { get; set; }
+
+                    [JsonIgnore]
+                    public int? RANK
+                    {
+                        get
+                        {
+                            if (int.TryParse(I_RANK, out int X))
+                            {
+                                return X;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
+
+                    #region RANK TYPE
+
+                    [JsonProperty(nameof(RANK_TYPE))]
+                    public string? I_RANK_TYPE { get; set; }
+
+                    [JsonIgnore]
+                    public int? RANK_TYPE
+                    {
+                        get
+                        {
+                            if (int.TryParse(I_RANK_TYPE, out int X))
+                            {
+                                return X;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
+
+                    #region WIN
+
+                    [JsonProperty(nameof(WIN))]
+                    public string? I_WIN { get; set; }
+
+                    [JsonIgnore]
+                    public int? WIN
+                    {
+                        get
+                        {
+                            if (int.TryParse(I_WIN, out int X))
+                            {
+                                return X;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
+
+                    #region LEVEL
+
+                    [JsonProperty(nameof(LEVEL))]
+                    public string? I_LEVEL { get; set; }
+
+                    [JsonIgnore]
+                    public int? LEVEL
+                    {
+                        get
+                        {
+                            if (int.TryParse(I_LEVEL, out int X))
+                            {
+                                return X;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
+
+                    #region XP
+
+                    [JsonProperty(nameof(XP))]
+                    public string? I_XP { get; set; }
+
+                    [JsonIgnore]
+                    public long? XP
+                    {
+                        get
+                        {
+                            if (long.TryParse(I_XP, out long X))
+                            {
+                                return X - 327680000;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
+
+                    #region PRIME
+
+                    [JsonProperty(nameof(PRIME))]
+                    public string? I_PRIME { get; set; }
+
+                    [JsonIgnore]
+                    public bool? PRIME
+                    {
+                        get
+                        {
+                            if (int.TryParse(I_PRIME, out int X))
+                            {
+                                return X == 1;
+                            }
+
+                            return null;
+                        }
+                    }
+
+                    #endregion
                 }
             }
 
@@ -3654,7 +4013,7 @@ namespace Granger
         public List<Tuple<string, IAccount.IBin.IGameStateListener>> TeamCT
         {
             get => AccountList
-                .Where(x => x.Bin.GameStateListener is not null)
+                .Where(x => x.Bin.Launched)
                 .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.CT)
                 .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
                 .ToList();
@@ -3664,7 +4023,7 @@ namespace Granger
         public List<Tuple<string, IAccount.IBin.IGameStateListener>> TeamT
         {
             get => AccountList
-                .Where(x => x.Bin.GameStateListener is not null)
+                .Where(x => x.Bin.Launched)
                 .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.T)
                 .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
                 .ToList();

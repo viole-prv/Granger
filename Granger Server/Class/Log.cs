@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
+using System.Text;
 using System.Text.RegularExpressions;
 using Viole_Pipe;
 
@@ -8,14 +9,15 @@ namespace GrangerServer
     {
         private bool _;
 
+        private readonly string SteamID;
         private readonly string Directory;
+        private readonly Pipe Pipe;
 
         private Thread? Thread;
 
-        private readonly Pipe Pipe;
-
-        public Log(string Directory, Pipe Pipe)
+        public Log(string SteamID, string Directory, Pipe Pipe)
         {
+            this.SteamID = SteamID;
             this.Directory = Directory;
             this.Pipe = Pipe;
 
@@ -37,12 +39,36 @@ namespace GrangerServer
             while (!File.Exists(Directory)) { }
         }
 
+        private class IMACHINE
+        {
+            [JsonProperty]
+            public string? RANK { get; set; }
+
+            [JsonProperty]
+            public string? RANK_TYPE { get; set; }
+
+            [JsonProperty]
+            public string? WIN { get; set; }
+
+            [JsonProperty]
+            public string? LEVEL { get; set; }
+
+            [JsonProperty]
+            public string? XP { get; set; }
+
+            [JsonProperty]
+            public string? PRIME { get; set; }
+        }
+
         private void GetLog()
         {
             Wait();
 
             try
             {
+                IMACHINE? MACHINE = null;
+                IMACHINE? MACHINE_X = null;
+
                 using var FileStream = new FileStream(Directory, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var StreamReader = new StreamReader(FileStream, Encoding.UTF8);
 
@@ -64,9 +90,13 @@ namespace GrangerServer
                         string IN_GAME = Regex.Match(Line, "ChangeGameUIState: CSGO_GAME_UI_STATE_LOADINGSCREEN -> CSGO_GAME_UI_STATE_INGAME").Value;
                         string MAIN_MENU = Regex.Match(Line, "ChangeGameUIState: CSGO_GAME_UI_STATE_INGAME -> CSGO_GAME_UI_STATE_MAINMENU").Value;
 
-                        string REJECT_BAD_PASSWORD = Regex.Match(Line, "#Valve_Reject_Bad_Password").Value;
-                        string REJECT_SERVER_FULL = Regex.Match(Line, "#Valve_Reject_Server_Full").Value;
-                        string REJECT_CONNECT_FROM_LOBBY = Regex.Match(Line, "#Valve_Reject_Connect_From_Lobby").Value;
+                        var STEAM_ID = Regex.Match(Line, @"id u64([^\n]+)");
+                        var RANK = Regex.Match(Line, @"ranking int([^\n]+)");
+                        var RANK_TYPE = Regex.Match(Line, @"ranktype int([^\n]+)");
+                        var WIN = Regex.Match(Line, @"wins int([^\n]+)");
+                        var LEVEL = Regex.Match(Line, @"level int([^\n]+)");
+                        var XP = Regex.Match(Line, @"xppts int([^\n]+)");
+                        var PRIME = Regex.Match(Line, @"prime int([^\n]+)");
 
                         if (!string.IsNullOrEmpty(GRANGER))
                         {
@@ -83,20 +113,56 @@ namespace GrangerServer
                             if (Pipe.Any())
                                 Pipe.Set("MAIN_MENU");
                         }
-                        else if (!string.IsNullOrEmpty(REJECT_BAD_PASSWORD))
+                        else if (!string.IsNullOrEmpty(STEAM_ID.Value))
                         {
-                            if (Pipe.Any())
-                                Pipe.Set("REJECT_BAD_PASSWORD");
+                            string _ = STEAM_ID.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+
+                            if (_ == SteamID)
+                            {
+                                MACHINE = new IMACHINE();
+                            }
                         }
-                        else if (!string.IsNullOrEmpty(REJECT_SERVER_FULL))
+
+                        if (MACHINE is not null)
                         {
-                            if (Pipe.Any())
-                                Pipe.Set("REJECT_SERVER_FULL");
-                        }
-                        else if (!string.IsNullOrEmpty(REJECT_CONNECT_FROM_LOBBY))
-                        {
-                            if (Pipe.Any())
-                                Pipe.Set("REJECT_CONNECT_FROM_LOBBY");
+                            if (!string.IsNullOrEmpty(RANK.Value))
+                            {
+                                MACHINE.RANK = RANK.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+                            else if (!string.IsNullOrEmpty(RANK_TYPE.Value))
+                            {
+                                MACHINE.RANK_TYPE = RANK_TYPE.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+                            else if (!string.IsNullOrEmpty(WIN.Value))
+                            {
+                                MACHINE.WIN = WIN.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+                            else if (!string.IsNullOrEmpty(LEVEL.Value))
+                            {
+                                MACHINE.LEVEL = LEVEL.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+                            else if (!string.IsNullOrEmpty(XP.Value))
+                            {
+                                MACHINE.XP = XP.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+                            else if (!string.IsNullOrEmpty(PRIME.Value))
+                            {
+                                MACHINE.PRIME = PRIME.Groups[0].Value.Split(' ')[2].Split(' ')[0];
+                            }
+
+                            if (!string.IsNullOrEmpty(MACHINE.RANK) && !string.IsNullOrEmpty(MACHINE.RANK_TYPE) && !string.IsNullOrEmpty(MACHINE.WIN) && !string.IsNullOrEmpty(MACHINE.LEVEL) && !string.IsNullOrEmpty(MACHINE.XP) && !string.IsNullOrEmpty(MACHINE.PRIME))
+                            {
+                                if (MACHINE_X == null || MACHINE.RANK != MACHINE_X.RANK || MACHINE.RANK_TYPE != MACHINE_X.RANK_TYPE || MACHINE.WIN != MACHINE_X.WIN || MACHINE.LEVEL != MACHINE_X.LEVEL || MACHINE.XP != MACHINE_X.XP || MACHINE.PRIME != MACHINE_X.PRIME)
+                                {
+                                    if (Pipe.Any())
+                                    {
+                                        Pipe.Set($"{JsonConvert.SerializeObject(new { Type = "MACHINE", Data = MACHINE })}");
+                                    }
+                                }
+
+                                MACHINE_X = MACHINE;
+                                MACHINE = null;
+                            }
                         }
                     }
                     catch (ThreadInterruptedException) { }

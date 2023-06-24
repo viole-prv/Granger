@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -10,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace Granger
 {
@@ -197,10 +200,7 @@ namespace Granger
 
         public static string? FileConvert(byte[] X)
         {
-            if (X == null)
-            {
-                return null;
-            }
+            if (X == null) return null;
 
             using var MemoryStream = new MemoryStream(X);
             using var StreamReader = new StreamReader(MemoryStream, Encoding.Default);
@@ -410,5 +410,24 @@ namespace Granger
             };
         }
 
+        public static BitmapImage? ImageConvert(Bitmap Bitmap)
+        {
+            if (Bitmap == null) return null;
+
+            using var MemoryStream = new MemoryStream();
+
+            Bitmap.Save(MemoryStream, ImageFormat.Png);
+
+            MemoryStream.Position = 0;
+
+            var BitmapImage = new BitmapImage();
+
+            BitmapImage.BeginInit();
+            BitmapImage.StreamSource = MemoryStream;
+            BitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            BitmapImage.EndInit();
+
+            return BitmapImage;
+        }
     }
 }

@@ -127,7 +127,11 @@ namespace GrangerServer
             Console.Title = Account.Login.ToUpper();
 
             Pipe = new Pipe($"_{Account.Login}");
-            Log = new Log(Path.Combine(AppDirectory, "log", $"{Account.Login}.log"), Pipe);
+            Log = new Log(
+                Account.Setup.SteamID.ToString(),
+                Path.Combine(AppDirectory, "log", $"{Account.Login}.log"),
+                Pipe
+            );
 
             try
             {
@@ -159,9 +163,9 @@ namespace GrangerServer
                                     FileName = "cmd.exe",
                                     Arguments = string.Join(" ", new string[]
                                     {
-                                        $"/C \"{Steam}\"",
+                                        $"/C \"{Steam}\" -vgui",
                                         $"-login {Account.Login} {Account.Password}",
-                                        $"-vgui -applaunch {AppID} -console -novid -nosound -window", Convert.ToString(Value?.Data)
+                                        $"-applaunch {AppID} -console -novid -nosound", Convert.ToString(Value?.Data)
                                     })
                                 }
                             };
@@ -225,7 +229,7 @@ namespace GrangerServer
                                 Process.Start();
                                 Process.Dispose();
 
-                                Thread.Sleep(2500);
+                                Thread.Sleep(10000);
                             }
 
                             Log.Dispose();
@@ -248,18 +252,18 @@ namespace GrangerServer
 
                             if (Dynamic?.Data is not null)
                             {
-                                string _Type = Convert.ToString(Dynamic.Type);
-                                string _Data = Convert.ToString(Dynamic.Data);
+                                string _TYPE = Convert.ToString(Dynamic.Type);
+                                string _DATA = Convert.ToString(Dynamic.Data);
 
-                                if (!string.IsNullOrEmpty(_Data))
+                                if (!string.IsNullOrEmpty(_DATA))
                                 {
-                                    if (_Type == "BIN")
+                                    if (_TYPE == "BIN")
                                     {
-                                        var _Bin = JsonConvert.DeserializeObject<IConfig.IAccount.IBin>(_Data);
+                                        var _BIN = JsonConvert.DeserializeObject<IConfig.IAccount.IBin>(_DATA);
 
-                                        if (_Bin is not null)
+                                        if (_BIN is not null)
                                         {
-                                            Account.Bin = _Bin;
+                                            Account.Bin = _BIN;
 
                                             Helper.ShowWindowAsync(Helper.GetConsoleWindow(), Account.Bin.Show
                                                 ? Helper.SW_SHOW
