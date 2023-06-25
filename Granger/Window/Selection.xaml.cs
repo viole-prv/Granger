@@ -1,34 +1,70 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
-using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 
 namespace Granger
 {
     public partial class Selection
     {
-        public class IDictionary : INotifyPropertyChanged
-        {
-            public CultureInfo Key { get; set; }
+        #region Auto
 
-            public IDictionary(CultureInfo Key)
+        public class IAuto : INotifyPropertyChanged
+        {
+            public List<IDictionary> Dictionary { get; set; }
+
+            public bool Bound { get; set; }
+
+            public IAuto(List<string> List, bool Bound)
             {
-                this.Key = Key;
+                Dictionary = List.Select(x => new IDictionary(x)).ToList();
+
+                this.Bound = Bound;
             }
 
-            private bool _Value;
-
-            public bool Value
+            public bool Any
             {
-                get => _Value;
-                set
-                {
-                    _Value = value;
+                get => Dictionary.Any(x => x.Value);
+            }
 
-                    NotifyPropertyChanged(nameof(Value));
+            public void Update()
+            {
+                NotifyPropertyChanged(nameof(Any));
+            }
+
+            #region Dictionary
+
+            public class IDictionary : INotifyPropertyChanged
+            {
+                public string Key { get; set; }
+
+                public IDictionary(string Key)
+                {
+                    this.Key = Key;
+                }
+
+                private bool _Value;
+
+                public bool Value
+                {
+                    get => _Value;
+                    set
+                    {
+                        _Value = value;
+
+                        NotifyPropertyChanged(nameof(Value));
+                    }
+                }
+
+                public event PropertyChangedEventHandler? PropertyChanged;
+
+                public void NotifyPropertyChanged(string? propertyName = null)
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
                 }
             }
+
+            #endregion
 
             public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -38,32 +74,20 @@ namespace Granger
             }
         }
 
-        public readonly List<IDictionary> Dictionary;
+        #endregion
 
-        public Selection(List<CultureInfo> List)
+        public readonly IAuto Auto;
+
+        public Selection(List<string> List, bool Bound)
         {
             InitializeComponent();
 
-            Dictionary = List.Select(x => new IDictionary(x)).ToList();
+            Auto = new(List, Bound);
 
-            DataContext = Dictionary;
+            DataContext = Auto;
         }
 
-        private void ToggleButton_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            if (sender is not ToggleButton ToggleButton || ToggleButton.DataContext is not IDictionary Pair) return;
-
-            if (Pair.Value)
-            {
-                Pair.Value = false;
-            }
-            else
-            {
-                if (Dictionary.Any(x => x.Value)) return;
-
-                Pair.Value = true;
-            }
-        }
+        private void ToggleButton_Click(object sender, System.Windows.RoutedEventArgs e) => Auto.Update();
 
         private void MetroWindow_Closing(object sender, CancelEventArgs e)
         {

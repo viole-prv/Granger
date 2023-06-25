@@ -1,10 +1,10 @@
-﻿<controls:MetroWindow
+﻿<c:MetroWindow
     x:Class="Granger.Storage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:c="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:g="clr-namespace:System.Globalization;assembly=mscorlib"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-    xmlns:style="clr-namespace:Granger.Style"
     Name="MetroWindow"
     Height="370"
     Loaded="MetroWindow_Loaded"
@@ -14,8 +14,8 @@
     SizeToContent="Width"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False">
-    <controls:MetroWindow.LeftWindowCommands>
-        <controls:WindowCommands>
+    <c:MetroWindow.LeftWindowCommands>
+        <c:WindowCommands>
             <Button Click="State_Click" IsTabStop="False">
                 <StackPanel>
                     <Button HorizontalAlignment="Left" IsTabStop="False">
@@ -189,8 +189,8 @@
                     </Button>
                 </StackPanel>
             </Button>
-        </controls:WindowCommands>
-    </controls:MetroWindow.LeftWindowCommands>
+        </c:WindowCommands>
+    </c:MetroWindow.LeftWindowCommands>
     <StackPanel Margin="10">
         <WrapPanel
             Margin="5,0,5,10"
@@ -215,7 +215,7 @@
                 Height="23"
                 Margin="0,0,10,10"
                 VerticalAlignment="Bottom"
-                controls:TextBoxHelper.Watermark="Поиск"
+                c:TextBoxHelper.Watermark="Поиск"
                 BorderThickness="0,0,0,1"
                 Text="{Binding Inventory.Seek, UpdateSourceTrigger=PropertyChanged}">
                 <TextBox.Style>
@@ -277,10 +277,10 @@
                                 <ToggleButton
                                     Grid.Column="0"
                                     Width="26"
-                                    controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                                    controls:ControlsHelper.FocusBorderBrush="Transparent"
-                                    controls:ControlsHelper.FocusBorderThickness="0"
-                                    controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                                    c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                                    c:ControlsHelper.FocusBorderBrush="Transparent"
+                                    c:ControlsHelper.FocusBorderThickness="0"
+                                    c:ControlsHelper.MouseOverBorderBrush="Transparent"
                                     Background="Transparent"
                                     BorderBrush="Transparent"
                                     BorderThickness="0"
@@ -343,7 +343,7 @@
                                             </i:EventTrigger>
                                         </i:Interaction.Triggers>
                                         <Run Text="{Binding Login}" />
-                                        <Run Text="{Binding StringFormat='({0})', Path=List.Count, Mode=OneWay}" />
+                                        <Run Text="{Binding List.Count, StringFormat='({0})', Mode=OneWay}" />
                                     </TextBlock>
                                     <TextBlock
                                         Grid.Column="1"
@@ -351,7 +351,7 @@
                                         VerticalAlignment="Center"
                                         Foreground="MediumPurple"
                                         Style="{StaticResource TextBlock}"
-                                        Text="{Binding StringFormat='{}{0}', Path=Price, Mode=OneWay}" />
+                                        Text="{Binding Price, Mode=OneWay, ConverterCulture={x:Static g:CultureInfo.CurrentCulture}, StringFormat='{}{0:C}'}" />
                                 </Grid>
                             </Grid>
                             <ListView
@@ -385,7 +385,7 @@
                                                 <Style TargetType="{x:Type Border}">
                                                     <Setter Property="Margin" Value="0,0,20,5" />
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding ElementName=Grid, Path=DataContext.List.Count}" Value="1">
+                                                        <DataTrigger Binding="{Binding DataContext.List.Count, ElementName=Grid}" Value="1">
                                                             <Setter Property="Margin" Value="0" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -417,13 +417,13 @@
                                                         Width="50"
                                                         Height="50"
                                                         Background="Transparent">
-                                                        <controls:ProgressRing
+                                                        <c:ProgressRing
                                                             Width="25"
                                                             Height="25"
                                                             Foreground="White"
                                                             IsActive="{Binding Progress}"
                                                             Visibility="{Binding Progress, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                            <controls:ProgressRing.Style>
+                                                            <c:ProgressRing.Style>
                                                                 <Style>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Value.Trade}" Value="True">
@@ -431,23 +431,23 @@
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
-                                                            </controls:ProgressRing.Style>
-                                                        </controls:ProgressRing>
+                                                            </c:ProgressRing.Style>
+                                                        </c:ProgressRing>
                                                         <Button
                                                             Width="25"
                                                             Height="25"
                                                             HorizontalAlignment="Center"
                                                             VerticalAlignment="Center"
-                                                            controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                                                            controls:ControlsHelper.FocusBorderBrush="Transparent"
-                                                            controls:ControlsHelper.FocusBorderThickness="0"
-                                                            controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                                                            c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                                                            c:ControlsHelper.FocusBorderBrush="Transparent"
+                                                            c:ControlsHelper.FocusBorderThickness="0"
+                                                            c:ControlsHelper.MouseOverBorderBrush="Transparent"
                                                             Background="Transparent"
                                                             BorderBrush="Transparent"
                                                             BorderThickness="0"
                                                             Click="Trade_Click"
                                                             Focusable="False"
-                                                            Tag="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListView}}, Path=DataContext.Login}">
+                                                            Tag="{Binding DataContext.Login, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListView}}}">
                                                             <Button.Style>
                                                                 <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="{x:Type Button}">
                                                                     <Style.Triggers>
@@ -540,16 +540,21 @@
                                                     <TextBlock
                                                         FontSize="10"
                                                         Foreground="Red"
-                                                        Visibility="{Binding Value.Lock, Converter={StaticResource StringToVisibilityConverter}}">
-                                                        <Run Text="LOCK:" />
-                                                        <Run Text="{Binding Value.Lock}" />
-                                                    </TextBlock>
-                                                    <TextBlock
-                                                        Foreground="White"
-                                                        Style="{StaticResource TextBlock}"
-                                                        ToolTip="{Binding Value.Name}">
-                                                        <Run Text="PRICE:" />
-                                                        <Run Text="{Binding Value, Mode=OneWay}" />
+                                                        Text="{Binding Value.Lock, StringFormat='{}LOCK: {0}'}"
+                                                        Visibility="{Binding Value.Lock, Converter={StaticResource StringToVisibilityConverter}}" />
+                                                    <TextBlock Foreground="White" ToolTip="{Binding Value.Name}">
+                                                        <TextBlock.Style>
+                                                            <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Value.Price}" Value="{x:Null}">
+                                                                        <Setter Property="Text" Value="PRICE: UNDEFINED" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Value.Price, Converter={StaticResource IntegerToVisibilityConverter}}" Value="Visible">
+                                                                        <Setter Property="Text" Value="{Binding Value.Price, Mode=OneWay, ConverterCulture={x:Static g:CultureInfo.CurrentCulture}, StringFormat='{}PRICE: {0:C}'}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
                                                     </TextBlock>
                                                 </StackPanel>
                                             </Grid>
@@ -574,8 +579,8 @@
                         </Style.Triggers>
                     </Style>
                 </Grid.Style>
-                <controls:MetroProgressBar IsIndeterminate="True" />
+                <c:MetroProgressBar IsIndeterminate="True" />
             </Grid>
         </Grid>
     </StackPanel>
-</controls:MetroWindow>
+</c:MetroWindow>

@@ -29,6 +29,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Markup;
 using System.Windows.Media;
 using Viole_Logger_Interface;
 using Viole_Pipe;
@@ -199,16 +200,16 @@ namespace Granger
                 }
             }
 
-            private bool _More;
+            private bool _Order;
 
-            public bool More
+            public bool Order
             {
-                get => _More;
+                get => _Order;
                 set
                 {
-                    _More = value;
+                    _Order = value;
 
-                    NotifyPropertyChanged(nameof(More));
+                    NotifyPropertyChanged(nameof(Order));
                 }
             }
 
@@ -659,6 +660,19 @@ namespace Granger
                     }
                 }
 
+                private Stopwatch? _Watch;
+
+                public Stopwatch? Watch
+                {
+                    get => _Watch;
+                    set
+                    {
+                        _Watch = value;
+
+                        NotifyPropertyChanged(nameof(Watch));
+                    }
+                }
+
                 private string? _Map;
 
                 public string? Map
@@ -682,19 +696,6 @@ namespace Granger
                         _Round = value;
 
                         NotifyPropertyChanged(nameof(Round));
-                    }
-                }
-
-                private RoundPhase _RoundPhase;
-
-                public RoundPhase Phase
-                {
-                    get => _RoundPhase;
-                    set
-                    {
-                        _RoundPhase = value;
-
-                        NotifyPropertyChanged(nameof(Phase));
                     }
                 }
 
@@ -750,6 +751,11 @@ namespace Granger
                     }
                 }
 
+                public void Update()
+                {
+                    NotifyPropertyChanged(nameof(Watch));
+                }
+
                 public void Reset()
                 {
                     Map = null;
@@ -757,6 +763,8 @@ namespace Granger
                     TeamCT = 0;
                     TeamT = 0;
                     Spectator = 0;
+
+                    this.Count += 1;
                 }
 
                 public event PropertyChangedEventHandler? PropertyChanged;
@@ -1507,7 +1515,7 @@ namespace Granger
 
                                                     if (string.IsNullOrEmpty(Icon) || string.IsNullOrEmpty(Price)) continue;
 
-                                                    var _ = Helper.ToPrice(Price, Auto.Config!.Steam.Culture);
+                                                    var _ = Helper.ToPrice(Price);
 
                                                     if (_.HasValue)
                                                     {
@@ -1593,9 +1601,37 @@ namespace Granger
 
                             try
                             {
-                                foreach (var Account in Auto.Config!.AccountList
+                                var AccountList = Auto.Config!.AccountList
                                     .Where(x => x.ShouldSerializeASF())
-                                    .ToList())
+                                    .ToList();
+
+                                Application.Current.Dispatcher.Invoke(delegate
+                                {
+                                    var Selection = new Selection(AccountList
+                                        .Select(x => x.Login)
+                                        .ToList(), true)
+                                    {
+                                        Owner = this
+                                    };
+
+                                    if (Selection.ShowDialog() ?? false)
+                                    {
+                                        foreach (var X in Selection.Auto.Dictionary)
+                                        {
+                                            for (int i = 0; i < AccountList.Count; i++)
+                                            {
+                                                if (X.Key == AccountList[i].Login)
+                                                {
+                                                    if (X.Value) continue;
+
+                                                    AccountList.Remove(AccountList[i]);
+                                                }
+                                            }
+                                        }
+                                    }
+                                });
+
+                                foreach (var Account in AccountList)
                                 {
                                     if (Watcher.Source.IsCancellationRequested) break;
 
@@ -2139,7 +2175,10 @@ namespace Granger
             {
                 Calendar = new Calendar(Auto.Config!.Storage
                     .SelectMany(x => x.List)
-                    .ToList());
+                    .ToList())
+                {
+                    Language = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)
+                };
 
                 Calendar.Show();
             }
@@ -2170,9 +2209,10 @@ namespace Granger
 
             if (Add.ShowDialog() ?? false)
             {
-                if (Add.Auto.Index is not null && Add.Auto.List.Count >= Add.Auto.Index)
+                if (Add.Auto.Index > -1 &&
+                    Add.Auto.List.Count >= Add.Auto.Index)
                 {
-                    var ASF = Add.Auto.List[Add.Auto.Index.Value];
+                    var ASF = Add.Auto.List[Add.Auto.Index];
 
                     Add.Auto.Person.ASF = new IConfig.IPerson.IASF()
                     {
@@ -2425,28 +2465,42 @@ namespace Granger
                 .Select(x => CultureInfo.GetCultureInfo(x.Name))
                 .ToList();
 
-            if (!CultureList.Contains(Auto.Config.Steam.Culture))
-            {
-                if (CultureList.Count == 1)
-                {
-                    Auto.Config.Steam.Culture = CultureList[0];
-                }
-                else
-                {
-                    var Selection = new Selection(CultureList)
-                    {
-                        Owner = this
-                    };
+            if (CultureList.Contains(Auto.Config.Steam.Culture)) return;
 
-                    if (Selection.ShowDialog() ?? false)
+            if (CultureList.Count == 1)
+            {
+                Auto.Config.Steam.Culture = CultureList[0];
+            }
+            else
+            {
+                var Selection = new Selection(CultureList
+                    .Select(x => x.Name)
+                    .ToList(), false)
+                {
+                    Owner = this
+                };
+
+                if (Selection.ShowDialog() ?? false)
+                {
+                    var T = Selection.Auto.Dictionary.Where(x => x.Value);
+
+                    if (T.Any())
                     {
-                        foreach (var X in Selection.Dictionary.Where(x => x.Value))
+                        foreach (var X in T)
                         {
-                            Auto.Config.Steam.Culture = X.Key;
+                            Auto.Config.Steam.Culture = new CultureInfo(X.Key);
                         }
+                    }
+                    else
+                    {
+                        Auto.Config.Steam.Culture = CultureList[0];
                     }
                 }
             }
+
+            CultureInfo.CurrentCulture = Auto.Config.Steam.Culture;
+
+            Language = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
 
             Auto.Config!.Update(IConfig.EUpdate.Storage, IConfig.EUpdate.Audit);
         }
@@ -2640,7 +2694,10 @@ namespace Granger
             {
                 if (Storage == null || Storage.IsClosed)
                 {
-                    Storage = new Storage(Auto);
+                    Storage = new Storage(Auto)
+                    {
+                        Language = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)
+                    };
 
                     Storage.Show();
                 }
@@ -2663,9 +2720,11 @@ namespace Granger
             Auto.Config!.Update(IConfig.EUpdate.Audit);
         }
 
-        private void More_Click(object sender, RoutedEventArgs e)
+        private void Order_Click(object sender, RoutedEventArgs e)
         {
-            Auto.More = !Auto.More;
+            Auto.Order = !Auto.Order;
+
+            Auto.Config!.Update(IConfig.EUpdate.Audit);
         }
 
         #region Copy
@@ -2678,10 +2737,12 @@ namespace Granger
             {
                 var List = Auto.Config!.Audit.ToDictionary(x => x.Name, x => Tuple.Create
                 (
-                    (Auto.Fee ? x.Receive : x.Price).ToString("C", Auto.Config!.Steam.Culture),
-                    Auto.More
-                        ? $"{x.Percent}%"
-                        : x.Count.ToString()
+                    (Auto.Fee
+                        ? x.Receive
+                        : x.Price)
+                    .ToString("C"),
+
+                    x.Count.ToString()
                 ));
 
                 int Key = List.Max(x => x.Key.Length) + 4;
@@ -2697,8 +2758,7 @@ namespace Granger
                 if (Auto.Config!.Revise is not null)
                 {
                     _ += "\n\r";
-                    _ += $"\nСтатистика: {Auto.Config!.Revise.Item1} ({Auto.Config!.Revise.Item2})";
-                    _ += $" ≈ {Auto.Config!.Revise.Item3}";
+                    _ += $"\nСтатистика: {Auto.Config!.Revise.Item1} ({Auto.Config!.Revise.Item2:C})";
                 }
 
                 Clipboard.SetText(_);
@@ -3206,15 +3266,12 @@ namespace Granger
 
                 #region Game State Listener
 
-                Account.Bin.GameStateListener.Kill = GameState.Player.MatchStats.Kills;
-                Account.Bin.GameStateListener.Death = GameState.Player.MatchStats.Deaths;
-                Account.Bin.GameStateListener.Score = GameState.Player.MatchStats.Score;
-
-                if (Account.Bin.GameStateListener.Team != GameState.Player.Team)
+                if (GameState.Map.Phase == MapPhase.Warmup || GameState.Map.Phase == MapPhase.Live)
                 {
-                    Account.Bin.GameStateListener.Reset(GameState.Player.Team);
-
-                    Auto.Config.Update(IConfig.EUpdate.GameStateListener);
+                    Account.Bin.GameStateListener.Kill = GameState.Player.MatchStats.Kills;
+                    Account.Bin.GameStateListener.Death = GameState.Player.MatchStats.Deaths;
+                    Account.Bin.GameStateListener.Score = GameState.Player.MatchStats.Score;
+                    Account.Bin.GameStateListener.Team = GameState.Player.Team;
                 }
 
                 #endregion
@@ -3235,19 +3292,22 @@ namespace Granger
                         }
                     });
 
+
                     switch (GameState.Map.Phase)
                     {
                         case MapPhase.Live:
                             Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
                             Auto.GameStateListener.Round = GameState.Map.Round;
-                            Auto.GameStateListener.Phase = GameState.Round.Phase;
                             Auto.GameStateListener.Spectator = GameState.Map.CurrentSpectators;
                             Auto.GameStateListener.TeamCT = GameState.Map.TeamCT.Score;
                             Auto.GameStateListener.TeamT = GameState.Map.TeamT.Score;
 
-                            return;
+                            break;
 
                         case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
+                            Auto.GameStateListener.Watch = new Stopwatch();
+                            Auto.GameStateListener.Watch.Start();
+
                             Auto.GameStateListener.Warmup = true;
                             Auto.GameStateListener.GameOver = false;
 
@@ -3262,9 +3322,17 @@ namespace Granger
                                 }
                             }
 
-                            return;
+                            break;
 
                         case MapPhase.GameOver when !Auto.GameStateListener.GameOver:
+
+                            if (Auto.GameStateListener.Watch is not null)
+                            {
+                                Auto.GameStateListener.Watch.Stop();
+
+                                Auto.GameStateListener.Watch = null;
+                            }
+
                             Auto.GameStateListener.GameOver = true;
                             Auto.GameStateListener.Warmup = false;
 
@@ -3273,7 +3341,6 @@ namespace Granger
                                 Auto.Inventory.Keep = false;
                             }
 
-                            Auto.GameStateListener.Count++;
                             Auto.GameStateListener.Reset();
 
                             foreach (var X in Auto.Config.AccountList.Where(x => x.Bin.Launched))
@@ -3281,8 +3348,13 @@ namespace Granger
                                 X.Bin.GameStateListener.Reset();
                             }
 
-                            return;
+                            break;
                     }
+
+                    Auto.GameStateListener.Update();
+
+                    Auto.Config.Update(IConfig.EUpdate.GameStateListener);
+
                 }
             }
             catch (Exception e)
@@ -4103,13 +4175,18 @@ namespace Granger
                 {
                     if (Auto.Sandbox && Auto.Config!.Sort == IConfig.ESort.Launch)
                     {
-                        if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
-                        {
-                            var DialogResult = await this.ShowMessageAsync("Предупреждение", "Вы точно ходите обновить дату?", MessageDialogStyle.AffirmativeAndNegative, new() { DialogMessageFontSize = 17, AffirmativeButtonText = "Продолжить", NegativeButtonText = "Отмена", AnimateHide = true, AnimateShow = true, ColorScheme = MetroDialogColorScheme.Theme });
+                        var DialogResult = await this.ShowMessageAsync("Предупреждение", "Вы точно ходите обновить дату?", MessageDialogStyle.AffirmativeAndNegative, new() { DialogMessageFontSize = 17, AffirmativeButtonText = "Продолжить", NegativeButtonText = "Отмена", AnimateHide = true, AnimateShow = true, ColorScheme = MetroDialogColorScheme.Theme });
 
-                            if (DialogResult == MessageDialogResult.Affirmative)
+                        if (DialogResult == MessageDialogResult.Affirmative)
+                        {
+                            if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
                             {
-                                Sort();
+                                Account.Setup.Date.Drop[Auto.Type] = DateTime.Now;
+
+                                if (Auto.Config!.Sort == IConfig.ESort.Launch)
+                                {
+                                    Sort();
+                                }
                             }
                         }
                     }
@@ -5383,7 +5460,7 @@ namespace Granger
 
                         if (Inventory == null || Inventory.Count == 0) continue;
 
-                        await SendMessage($"<code>{Account.Tag()} | {string.Join(", ", Inventory.Select(x => $"{x.Description.MarketName}{(x.Asset.Price.HasValue ? $" ({x.Asset.Price.Value.ToString("C", Auto.Config!.Steam.Culture)})" : "")}"))}{(Account.Setup.Date.Since.HasValue ? $" | {Account.Setup.Date.Since.Value:hh':'mm':'ss}" : "")}</code>");
+                        await SendMessage($"<code>{Account.Tag()} | {string.Join(", ", Inventory.Select(x => $"{x.Description.MarketName}{(x.Asset.Price.HasValue ? $" ({x.Asset.Price.Value:C})" : "")}"))}{(Account.Setup.Date.Since.HasValue ? $" | {Account.Setup.Date.Since.Value:hh':'mm':'ss}" : "")}</code>");
                     }
 
                     if (Auto.Type == IAuto.EType.TF2)
@@ -5493,18 +5570,16 @@ namespace Granger
                                         Account.Bin.Inventory.New += List.Count;
                                         Account.Bin.Inventory.Count = Inventory.Count;
 
-                                        if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
-                                        {
-                                            Account.Setup.Date.Drop[Auto.Type] = Account.Bin.Position.Key == IConfig.IAccount.IBin.EPosition.MAIN_MENU
-                                                ? Account.Bin.Position.Value
-                                                : DateTime.Now;
-                                        }
-
                                         Account.Update();
 
-                                        if (Auto.Config!.Sort == IConfig.ESort.Launch)
+                                        if (Account.Setup.Date.Drop.ContainsKey(Auto.Type))
                                         {
-                                            Sort();
+                                            Account.Setup.Date.Drop[Auto.Type] = DateTime.Now;
+
+                                            if (Auto.Config!.Sort == IConfig.ESort.Launch)
+                                            {
+                                                Sort();
+                                            }
                                         }
 
                                         Watcher.Source.Token.ThrowIfCancellationRequested();

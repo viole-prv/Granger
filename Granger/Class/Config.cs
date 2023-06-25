@@ -298,7 +298,7 @@ namespace Granger
 
             private bool _Notification = true;
 
-            [JsonProperty(nameof(Notification))]
+            [JsonProperty]
             public bool Notification
             {
                 get => _Notification;
@@ -1527,7 +1527,7 @@ namespace Granger
                                                     {
                                                         try
                                                         {
-                                                            return Helper.ToPrice(JSON.Value.Price, Auto.Config!.Steam.Culture);
+                                                            return Helper.ToPrice(JSON.Value.Price);
                                                         }
                                                         catch (FormatException)
                                                         {
@@ -2406,46 +2406,11 @@ namespace Granger
                             _XP = value;
 
                             NotifyPropertyChanged(nameof(XP));
-                            NotifyPropertyChanged(nameof(Foreground));
                         }
                     }
 
                     public bool ShouldSerializeXP() => XP > 0;
 
-                    private long _NEW = 500;
-
-                    [JsonIgnore]
-                    public long NEW
-                    {
-                        get => _NEW;
-                        set
-                        {
-                            _NEW = value;
-
-                            NotifyPropertyChanged(nameof(NEW));
-                            NotifyPropertyChanged(nameof(Foreground));
-                        }
-                    }
-
-                    [JsonIgnore]
-                    public LinearGradientBrush Foreground
-                    {
-                        get
-                        {
-                            var T = new LinearGradientBrush
-                            {
-                                StartPoint = new System.Windows.Point(0, 1),
-                                EndPoint = new System.Windows.Point(1, 0)
-                            };
-
-                            T.GradientStops.Add(new GradientStop(Colors.LightSteelBlue, 0));
-                            T.GradientStops.Add(new GradientStop(Colors.LightSteelBlue, 0.8));
-                            T.GradientStops.Add(new GradientStop(NEW == 0 ? Colors.LightSteelBlue : Colors.Lime, 0.8));
-                            T.GradientStops.Add(new GradientStop(NEW == 0 ? Colors.LightSteelBlue : Colors.Lime, 1));
-
-                            return T;
-                        }
-                    }
 
                     private bool? _Prime;
 
@@ -2694,13 +2659,12 @@ namespace Granger
                         }
                     }
 
-                    public void Reset(PlayerTeam? Team = null)
+                    public void Reset()
                     {
                         Kill = 0;
                         Death = 0;
                         Score = 0;
-
-                        this.Team = Team;
+                        Team = null;
                     }
 
                     public event PropertyChangedEventHandler? PropertyChanged;
@@ -2953,11 +2917,6 @@ namespace Granger
                         public string? Lock { get; set; }
 
                         public bool ShouldSerializeLock() => !string.IsNullOrEmpty(Lock);
-
-                        public override string ToString()
-                        {
-                            return (Price ?? 0).ToString("C", Auto.Config!.Steam.Culture);
-                        }
 
                         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -3269,23 +3228,6 @@ namespace Granger
 
                                                     if (_MACHINE.XP.HasValue)
                                                     {
-                                                        if (Account.Setup.Data.ShouldSerializeXP())
-                                                        {
-                                                            long NEW = _MACHINE.XP.Value;
-                                                            long OLD = Account.Setup.Data.XP;
-
-                                                            long _ = Math.Abs(NEW - OLD);
-
-                                                            if (NEW < OLD)
-                                                            {
-                                                                _ = Math.Abs(5000 - OLD + NEW);
-                                                            }
-
-                                                            Account.Setup.Data.NEW = _ > 0
-                                                                ? _
-                                                                : 0;
-                                                        }
-
                                                         Account.Setup.Data.XP = _MACHINE.XP.Value;
                                                     }
 
@@ -3329,7 +3271,7 @@ namespace Granger
                 {
                     #region RANK
 
-                    [JsonProperty(nameof(RANK))]
+                    [JsonProperty]
                     public string? I_RANK { get; set; }
 
                     [JsonIgnore]
@@ -3350,7 +3292,7 @@ namespace Granger
 
                     #region RANK TYPE
 
-                    [JsonProperty(nameof(RANK_TYPE))]
+                    [JsonProperty]
                     public string? I_RANK_TYPE { get; set; }
 
                     [JsonIgnore]
@@ -3371,7 +3313,7 @@ namespace Granger
 
                     #region WIN
 
-                    [JsonProperty(nameof(WIN))]
+                    [JsonProperty]
                     public string? I_WIN { get; set; }
 
                     [JsonIgnore]
@@ -3392,7 +3334,7 @@ namespace Granger
 
                     #region LEVEL
 
-                    [JsonProperty(nameof(LEVEL))]
+                    [JsonProperty]
                     public string? I_LEVEL { get; set; }
 
                     [JsonIgnore]
@@ -3413,7 +3355,7 @@ namespace Granger
 
                     #region XP
 
-                    [JsonProperty(nameof(XP))]
+                    [JsonProperty]
                     public string? I_XP { get; set; }
 
                     [JsonIgnore]
@@ -3434,7 +3376,7 @@ namespace Granger
 
                     #region PRIME
 
-                    [JsonProperty(nameof(PRIME))]
+                    [JsonProperty]
                     public string? I_PRIME { get; set; }
 
                     [JsonIgnore]
@@ -3765,9 +3707,9 @@ namespace Granger
                 get => Cluster.Any(x => x.Visibility);
             }
 
-            public string Price
+            public decimal Price
             {
-                get => List.Where(x => x.Value.Price.HasValue).Sum(x => x.Value.Price!.Value).ToString("C", Auto.Config!.Steam.Culture);
+                get => List.Where(x => x.Value.Price.HasValue).Sum(x => x.Value.Price!.Value);
             }
 
             public IStorage(string Login, List<ICluster> Cluster)
@@ -3880,16 +3822,6 @@ namespace Granger
                 this.Percent = Percent;
             }
 
-            public string IPrice
-            {
-                get => Price.ToString("C", Auto.Config!.Steam.Culture);
-            }
-
-            public string IReceive
-            {
-                get => Receive.ToString("C", Auto.Config!.Steam.Culture);
-            }
-
             #region Click
 
             private ICommand? _OnClick;
@@ -3935,7 +3867,7 @@ namespace Granger
         #endregion
 
         [JsonIgnore]
-        public Tuple<int, string, string>? Revise
+        public Tuple<int, decimal>? Revise
         {
             get
             {
@@ -3946,8 +3878,7 @@ namespace Granger
 
                 return Tuple.Create(
                     Count,
-                    Math.Round(_, 2).ToString("C", Auto.Config!.Steam.Culture),
-                    Math.Round(_ / Count, 2).ToString("C", Auto.Config!.Steam.Culture)
+                    Math.Round(_, 2)
                 );
             }
         }
@@ -3994,8 +3925,9 @@ namespace Granger
                         x.Count(),
                         Math.Round((double)x.Count() / X.Count() * 100, 2)
                     ))
-                    .OrderBy(x => x.Price)
-                    .OrderBy(x => x.Count)
+                    .OrderBy(x => Auto.Order
+                        ? x.Price
+                        : x.Count)
                     .Reverse()
                     .ToList();
 
@@ -4015,6 +3947,8 @@ namespace Granger
             get => AccountList
                 .Where(x => x.Bin.Launched)
                 .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.CT)
+                .OrderBy(x => x.Bin.GameStateListener!.Score)
+                .Reverse()
                 .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
                 .ToList();
         }
@@ -4025,6 +3959,8 @@ namespace Granger
             get => AccountList
                 .Where(x => x.Bin.Launched)
                 .Where(x => x.Bin.GameStateListener!.Team == PlayerTeam.T)
+                .OrderBy(x => x.Bin.GameStateListener!.Score)
+                .Reverse()
                 .Select(x => Tuple.Create(x.Login.ToUpper(), x.Bin.GameStateListener!))
                 .ToList();
         }

@@ -1,8 +1,8 @@
-﻿<controls:MetroWindow
+﻿<c:MetroWindow
     x:Class="Granger.Scoreboard"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:c="http://metro.mahapps.com/winfx/xaml/controls"
     Name="MetroWindow"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanMinimize"
@@ -11,24 +11,51 @@
     SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False">
-    <controls:MetroWindow.TitleTemplate>
+    <c:MetroWindow.TitleTemplate>
         <ItemContainerTemplate>
-            <TextBlock
+            <StackPanel
                 Margin="14,0,0,0"
                 VerticalAlignment="Center"
-                FontSize="15"
-                Visibility="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Map, Converter={StaticResource StringToVisibilityConverter}}">
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Map}" />
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Count, StringFormat='{}({0})'}" />
-                <Run Text="| ROUND:" />
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Round}" />
-                <Run Text="| PHASE:" />
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Phase}" />
-                <Run Text="| SPECTATOR:" />
-                <Run Text="{Binding ElementName=MetroWindow, Path=DataContext.GameStateListener.Spectator}" />
-            </TextBlock>
+                DataContext="{Binding DataContext.GameStateListener, ElementName=MetroWindow}"
+                Orientation="Horizontal"
+                Visibility="{Binding Map, Converter={StaticResource StringToVisibilityConverter}}">
+                <TextBlock FontSize="15" Style="{StaticResource TextBlock}">
+                    <Run Text="{Binding Map}" />
+                    <Run Text="{Binding Count, StringFormat='{}({0})'}" />
+                    <Run Text="{Binding Round, StringFormat='{}| ROUND: {0}'}" />
+                </TextBlock>
+                <TextBlock FontSize="15">
+                    <TextBlock.Style>
+                        <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Watch}" Value="{x:Null}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                    <TextBlock.Text>
+                        <MultiBinding Mode="OneWay" StringFormat="{} | TIME: {0:00}.{1:00}:{2:00}">
+                            <Binding Path="Watch.Elapsed.Hours" />
+                            <Binding Path="Watch.Elapsed.Minutes" />
+                            <Binding Path="Watch.Elapsed.Seconds" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                <TextBlock FontSize="15" Text="{Binding Spectator, StringFormat='{} | SPECTATORS: {0}'}">
+                    <TextBlock.Style>
+                        <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Spectator}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StackPanel>
         </ItemContainerTemplate>
-    </controls:MetroWindow.TitleTemplate>
+    </c:MetroWindow.TitleTemplate>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -53,7 +80,7 @@
                     Grid.Column="0"
                     Margin="2,0,0,0"
                     HorizontalAlignment="Stretch"
-                    Text="{Binding GameStateListener.TeamCT}" />
+                    Text="{Binding GameStateListener.TeamCT, StringFormat='TEAM CT: {0}'}" />
                 <TextBlock Grid.Column="1" Text="K" />
                 <TextBlock Grid.Column="2" Text="D" />
                 <TextBlock Grid.Column="3" Text="S" />
@@ -112,7 +139,7 @@
                     Grid.Column="0"
                     Margin="2,0,0,0"
                     HorizontalAlignment="Stretch"
-                    Text="{Binding GameStateListener.TeamT}" />
+                    Text="{Binding GameStateListener.TeamT, StringFormat='TEAM T: {0}'}" />
                 <TextBlock Grid.Column="1" Text="K" />
                 <TextBlock Grid.Column="2" Text="D" />
                 <TextBlock Grid.Column="3" Text="S" />
@@ -154,4 +181,4 @@
             </ListView>
         </StackPanel>
     </Grid>
-</controls:MetroWindow>
+</c:MetroWindow>

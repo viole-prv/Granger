@@ -1,8 +1,8 @@
-﻿<controls:MetroWindow
+﻿<c:MetroWindow
     x:Class="Granger.Add"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:c="http://metro.mahapps.com/winfx/xaml/controls"
     Name="MetroWindow"
     Closing="MetroWindow_Closing"
     Loaded="MetroWindow_Loaded"
@@ -11,8 +11,8 @@
     ShowMaxRestoreButton="False"
     SizeToContent="WidthAndHeight"
     WindowTransitionsEnabled="False">
-    <controls:MetroWindow.LeftWindowCommands>
-        <controls:WindowCommands>
+    <c:MetroWindow.LeftWindowCommands>
+        <c:WindowCommands>
             <Button Click="Open_Click" IsTabStop="False">
                 <StackPanel>
                     <Button HorizontalAlignment="Left" IsTabStop="False">
@@ -72,8 +72,8 @@
                     </Button>
                 </StackPanel>
             </Button>
-        </controls:WindowCommands>
-    </controls:MetroWindow.LeftWindowCommands>
+        </c:WindowCommands>
+    </c:MetroWindow.LeftWindowCommands>
     <Grid Margin="20,10">
         <StackPanel DataContext="{Binding Person}">
             <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -116,7 +116,7 @@
                     ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"
                     ToolTipService.IsEnabled="{Binding Text, Converter={StaticResource StringToBooleanConverter}, RelativeSource={RelativeSource Self}}" />
             </StackPanel>
-            <StackPanel Orientation="Vertical" Visibility="{Binding ElementName=MetroWindow, Path=DataContext.Open, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel Orientation="Vertical" Visibility="{Binding DataContext.Open, ElementName=MetroWindow, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <StackPanel.Style>
                     <Style TargetType="{x:Type StackPanel}">
                         <Style.Triggers>
@@ -168,7 +168,7 @@
                             <TextBox.Style>
                                 <Style BasedOn="{StaticResource MahApps.Styles.TextBox}" TargetType="{x:Type TextBox}">
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Index, Converter={StaticResource StringToBooleanConverter}}" Value="True">
+                                        <DataTrigger Binding="{Binding DataContext.Index, ElementName=MetroWindow, Converter={StaticResource StringToBooleanConverter}}" Value="True">
                                             <Setter Property="IsEnabled" Value="False" />
                                         </DataTrigger>
                                     </Style.Triggers>
@@ -178,11 +178,11 @@
                         <ComboBox
                             Grid.Column="2"
                             Width="90"
-                            controls:TextBoxHelper.Watermark="Пример"
+                            c:TextBoxHelper.Watermark="Пример"
                             BorderThickness="0,0,0,1"
-                            ItemsSource="{Binding ElementName=MetroWindow, Path=DataContext.List}"
+                            ItemsSource="{Binding DataContext.List, ElementName=MetroWindow}"
                             PreviewMouseDown="List_PreviewMouseDown"
-                            SelectedIndex="{Binding ElementName=MetroWindow, Path=DataContext.Index}">
+                            SelectedIndex="{Binding DataContext.Index, ElementName=MetroWindow}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock
@@ -235,7 +235,7 @@
                         <StackPanel.Style>
                             <Style TargetType="{x:Type StackPanel}">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=MetroWindow, Path=DataContext.Index, Converter={StaticResource StringToBooleanConverter}}" Value="True">
+                                    <DataTrigger Binding="{Binding DataContext.Index, ElementName=MetroWindow, Converter={StaticResource StringToBooleanConverter}}" Value="True">
                                         <Setter Property="IsEnabled" Value="False" />
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -262,4 +262,4 @@
             </StackPanel>
         </StackPanel>
     </Grid>
-</controls:MetroWindow>
+</c:MetroWindow>

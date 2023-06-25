@@ -171,33 +171,28 @@ namespace Granger
 
                     public List<IConfig.IStorage.ICluster> Cluster { get; set; }
 
-                    public decimal Price { get; set; }
+                    public decimal Price
+                    {
+                        get => Cluster.Where(x => x.Value.Price.HasValue).Sum(x => x.Value.Price!.Value);
+                    }
 
                     public ICalendar(int Day, List<IConfig.IStorage.ICluster> Cluster)
                     {
                         this.Day = Day;
-
                         this.Cluster = Cluster;
-
-                        Price = Cluster.Where(x => x.Value.Price.HasValue).Sum(x => x.Value.Price!.Value);
                     }
 
-                    private bool _ICluster;
+                    private bool _Visibility;
 
-                    public bool ICluster
+                    public bool Visibility
                     {
-                        get => _ICluster;
+                        get => _Visibility;
                         set
                         {
-                            _ICluster = value;
+                            _Visibility = value;
 
-                            NotifyPropertyChanged(nameof(ICluster));
+                            NotifyPropertyChanged(nameof(Visibility));
                         }
-                    }
-
-                    public override string ToString()
-                    {
-                        return Price.ToString("C", Program.Auto.Config!.Steam.Culture);
                     }
 
                     public event PropertyChangedEventHandler? PropertyChanged;
@@ -275,15 +270,15 @@ namespace Granger
 
             if (Calendar.Cluster.Count > 0)
             {
-                Calendar.ICluster = !Calendar.ICluster;
+                Calendar.Visibility = !Calendar.Visibility;
 
                 var List = Auto.List!.SelectMany(x => x.Calendar);
 
-                if (List.Any(x => x.ICluster))
+                if (List.Any(x => x.Visibility))
                 {
                     foreach (var X in List)
                     {
-                        X.Cluster.ForEach(x => x.Visibility = X.ICluster);
+                        X.Cluster.ForEach(x => x.Visibility = X.Visibility);
                     }
                 }
                 else
@@ -294,7 +289,7 @@ namespace Granger
                     }
                 }
 
-                Program.Auto.Animation.Storage = Calendar.ICluster;
+                Program.Auto.Animation.Storage = Calendar.Visibility;
 
                 Program.IAuto.IInventory.Update();
             }

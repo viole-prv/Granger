@@ -58,9 +58,9 @@ namespace Granger
                 }
             }
 
-            private int? _Index;
+            private int _Index = -1;
 
-            public int? Index
+            public int Index
             {
                 get => _Index;
                 set
@@ -118,7 +118,7 @@ namespace Granger
         {
             if (e.ClickCount == 1 && Keyboard.Modifiers == ModifierKeys.Control)
             {
-                Auto.Index = null;
+                Auto.Index = -1;
             }
         }
 

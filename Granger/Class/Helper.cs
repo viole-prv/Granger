@@ -222,7 +222,7 @@ namespace Granger
             }
         }
 
-        public static decimal? ToPrice(string _, CultureInfo Culture)
+        public static decimal? ToPrice(string _)
         {
             if (string.IsNullOrEmpty(_)) return null;
 
@@ -230,7 +230,7 @@ namespace Granger
 
             if (Match.Any())
             {
-                if (decimal.TryParse(string.Join("", Match.Select(x => x.Value)).TrimEnd(',').TrimEnd('.'), NumberStyles.Currency, Culture, out decimal Price))
+                if (decimal.TryParse(string.Join("", Match.Select(x => x.Value)).TrimEnd(',').TrimEnd('.'), NumberStyles.Currency, CultureInfo.CurrentCulture, out decimal Price))
                 {
                     return Price;
                 }

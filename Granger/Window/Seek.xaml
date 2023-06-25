@@ -1,8 +1,8 @@
-﻿<controls:MetroWindow
+﻿<c:MetroWindow
     x:Class="Granger.Seek"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:c="http://metro.mahapps.com/winfx/xaml/controls"
     MinWidth="245"
     MinHeight="57"
     PreviewKeyDown="MetroWindow_PreviewKeyDown"
@@ -26,7 +26,7 @@
             Grid.Column="0"
             Height="26"
             Margin="0,0,5,0"
-            controls:TextBoxHelper.Watermark="Поиск"
+            c:TextBoxHelper.Watermark="Поиск"
             BorderThickness="0"
             Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
             TextChanged="TextBox_TextChanged"
@@ -35,10 +35,10 @@
             <Button
                 Width="26"
                 Margin="6,0,0,0"
-                controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                controls:ControlsHelper.FocusBorderBrush="Transparent"
-                controls:ControlsHelper.FocusBorderThickness="0"
-                controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
                 Background="Transparent"
                 BorderBrush="Transparent"
                 BorderThickness="0"
@@ -73,10 +73,10 @@
             <Button
                 Width="26"
                 Margin="6,0,0,0"
-                controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                controls:ControlsHelper.FocusBorderBrush="Transparent"
-                controls:ControlsHelper.FocusBorderThickness="0"
-                controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
                 Background="Transparent"
                 BorderBrush="Transparent"
                 BorderThickness="0"
@@ -111,10 +111,10 @@
             <Button
                 Width="24"
                 Margin="3,0,0,0"
-                controls:ControlsHelper.DisabledVisualElementVisibility="Hidden"
-                controls:ControlsHelper.FocusBorderBrush="Transparent"
-                controls:ControlsHelper.FocusBorderThickness="0"
-                controls:ControlsHelper.MouseOverBorderBrush="Transparent"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
                 Background="Transparent"
                 BorderBrush="Transparent"
                 BorderThickness="0"
@@ -135,4 +135,4 @@
             </Button>
         </StackPanel>
     </Grid>
-</controls:MetroWindow>
+</c:MetroWindow>
