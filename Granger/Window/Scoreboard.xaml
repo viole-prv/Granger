@@ -11,58 +11,88 @@
     SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False">
-    <c:MetroWindow.TitleTemplate>
-        <ItemContainerTemplate>
-            <StackPanel
-                Margin="14,0,0,0"
-                VerticalAlignment="Center"
-                DataContext="{Binding DataContext.GameStateListener, ElementName=MetroWindow}"
-                Orientation="Horizontal"
-                Visibility="{Binding Map, Converter={StaticResource StringToVisibilityConverter}}">
-                <TextBlock FontSize="15" Style="{StaticResource TextBlock}">
-                    <Run Text="{Binding Map}" />
-                    <Run Text="{Binding Count, StringFormat='{}({0})'}" />
-                    <Run Text="{Binding Round, StringFormat='{}| ROUND: {0}'}" />
-                </TextBlock>
-                <TextBlock FontSize="15">
-                    <TextBlock.Style>
-                        <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Watch}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                    <TextBlock.Text>
-                        <MultiBinding Mode="OneWay" StringFormat="{} | TIME: {0:00}.{1:00}:{2:00}">
-                            <Binding Path="Watch.Elapsed.Hours" />
-                            <Binding Path="Watch.Elapsed.Minutes" />
-                            <Binding Path="Watch.Elapsed.Seconds" />
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-                <TextBlock FontSize="15" Text="{Binding Spectator, StringFormat='{} | SPECTATORS: {0}'}">
-                    <TextBlock.Style>
-                        <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding Spectator}" Value="0">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </StackPanel>
-        </ItemContainerTemplate>
-    </c:MetroWindow.TitleTemplate>
+    <c:MetroWindow.LeftWindowCommands>
+        <c:WindowCommands>
+            <c:WindowCommands.Resources>
+                <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                    <Setter Property="HorizontalAlignment" Value="Center" />
+                    <Setter Property="FontSize" Value="15" />
+                    <Setter Property="Visibility" Value="{Binding GameStateListener.Map, Converter={StaticResource StringToVisibilityConverter}}" />
+                    <Setter Property="Padding" Value="10,0" />
+                </Style>
+            </c:WindowCommands.Resources>
+            <Button Click="Switch_Click" IsTabStop="False">
+                <StackPanel>
+                    <Button HorizontalAlignment="Left" IsTabStop="False">
+                        <Image Width="22">
+                            <Image.Style>
+                                <Style TargetType="{x:Type Image}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding GameStateListener.Switch}" Value="False">
+                                            <Setter Property="Source">
+                                                <Setter.Value>
+                                                    <DrawingImage>
+                                                        <DrawingImage.Drawing>
+                                                            <DrawingGroup>
+                                                                <GeometryDrawing Brush="White" Geometry="M17,7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7M7,15A3,3 0 0,1 4,12A3,3 0 0,1 7,9A3,3 0 0,1 10,12A3,3 0 0,1 7,15Z" />
+                                                            </DrawingGroup>
+                                                        </DrawingImage.Drawing>
+                                                    </DrawingImage>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding GameStateListener.Switch}" Value="True">
+                                            <Setter Property="Source">
+                                                <Setter.Value>
+                                                    <DrawingImage>
+                                                        <DrawingImage.Drawing>
+                                                            <DrawingGroup>
+                                                                <GeometryDrawing Brush="White" Geometry="M17,7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7M17,15A3,3 0 0,1 14,12A3,3 0 0,1 17,9A3,3 0 0,1 20,12A3,3 0 0,1 17,15Z" />
+                                                            </DrawingGroup>
+                                                        </DrawingImage.Drawing>
+                                                    </DrawingImage>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Image.Style>
+                        </Image>
+                    </Button>
+                </StackPanel>
+            </Button>
+            <TextBlock>
+                <Run Text="{Binding GameStateListener.Map}" />
+                <Run Text="{Binding GameStateListener.Count, StringFormat='{}({0})'}" />
+            </TextBlock>
+            <TextBlock>
+                <TextBlock.Style>
+                    <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding GameStateListener.Watch}" Value="{x:Null}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+                <TextBlock.Text>
+                    <MultiBinding Mode="OneWay" StringFormat="{}{0:00}.{1:00}:{2:00}">
+                        <Binding Path="GameStateListener.Watch.Elapsed.Hours" />
+                        <Binding Path="GameStateListener.Watch.Elapsed.Minutes" />
+                        <Binding Path="GameStateListener.Watch.Elapsed.Seconds" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+        </c:WindowCommands>
+    </c:MetroWindow.LeftWindowCommands>
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="25" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Width="288">
+        <StackPanel Grid.Column="0">
             <Grid Margin="4,0,0,6">
                 <Grid.Resources>
                     <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
@@ -76,11 +106,7 @@
                     <ColumnDefinition Width="40" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    Margin="2,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    Text="{Binding GameStateListener.TeamCT, StringFormat='TEAM CT: {0}'}" />
+                <Grid Grid.Column="0" />
                 <TextBlock Grid.Column="1" Text="K" />
                 <TextBlock Grid.Column="2" Text="D" />
                 <TextBlock Grid.Column="3" Text="S" />
@@ -113,7 +139,20 @@
                                 HorizontalAlignment="Stretch"
                                 Text="{Binding Item1}"
                                 TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{Binding Item2.Kill}" />
+                            <TextBlock Grid.Column="1">
+                                <TextBlock.Style>
+                                    <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.GameStateListener.Switch, ElementName=MetroWindow}" Value="True">
+                                                <Setter Property="Text" Value="{Binding Item2.Sum}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataContext.GameStateListener.Switch, ElementName=MetroWindow}" Value="False">
+                                                <Setter Property="Text" Value="{Binding Item2.Kill}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Grid.Column="2" Text="{Binding Item2.Death}" />
                             <TextBlock Grid.Column="3" Text="{Binding Item2.Score}" />
                         </Grid>
@@ -121,7 +160,7 @@
                 </ListView.ItemTemplate>
             </ListView>
         </StackPanel>
-        <StackPanel Grid.Column="2" Width="288">
+        <StackPanel Grid.Column="2">
             <Grid Margin="4,0,0,6">
                 <Grid.Resources>
                     <Style BasedOn="{StaticResource TextBlock}" TargetType="{x:Type TextBlock}">
@@ -135,11 +174,7 @@
                     <ColumnDefinition Width="40" />
                     <ColumnDefinition Width="40" />
                 </Grid.ColumnDefinitions>
-                <TextBlock
-                    Grid.Column="0"
-                    Margin="2,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    Text="{Binding GameStateListener.TeamT, StringFormat='TEAM T: {0}'}" />
+                <Grid Grid.Column="0" />
                 <TextBlock Grid.Column="1" Text="K" />
                 <TextBlock Grid.Column="2" Text="D" />
                 <TextBlock Grid.Column="3" Text="S" />
@@ -172,7 +207,20 @@
                                 HorizontalAlignment="Stretch"
                                 Text="{Binding Item1}"
                                 TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{Binding Item2.Kill}" />
+                            <TextBlock Grid.Column="1">
+                                <TextBlock.Style>
+                                    <Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.GameStateListener.Switch, ElementName=MetroWindow}" Value="True">
+                                                <Setter Property="Text" Value="{Binding Item2.Sum}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataContext.GameStateListener.Switch, ElementName=MetroWindow}" Value="False">
+                                                <Setter Property="Text" Value="{Binding Item2.Kill}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Grid.Column="2" Text="{Binding Item2.Death}" />
                             <TextBlock Grid.Column="3" Text="{Binding Item2.Score}" />
                         </Grid>

@@ -200,16 +200,16 @@ namespace Granger
                 }
             }
 
-            private bool _Order;
+            private bool _Count = true;
 
-            public bool Order
+            public bool Count
             {
-                get => _Order;
+                get => _Count;
                 set
                 {
-                    _Order = value;
+                    _Count = value;
 
-                    NotifyPropertyChanged(nameof(Order));
+                    NotifyPropertyChanged(nameof(Count));
                 }
             }
 
@@ -673,6 +673,19 @@ namespace Granger
                     }
                 }
 
+                private bool _Switch;
+
+                public bool Switch
+                {
+                    get => _Switch;
+                    set
+                    {
+                        _Switch = value;
+
+                        NotifyPropertyChanged(nameof(Switch));
+                    }
+                }
+
                 private string? _Map;
 
                 public string? Map
@@ -683,58 +696,6 @@ namespace Granger
                         _Map = value;
 
                         NotifyPropertyChanged(nameof(Map));
-                    }
-                }
-
-                private int _Round;
-
-                public int Round
-                {
-                    get => _Round;
-                    set
-                    {
-                        _Round = value;
-
-                        NotifyPropertyChanged(nameof(Round));
-                    }
-                }
-
-                private int _Spectator;
-
-                public int Spectator
-                {
-                    get => _Spectator;
-                    set
-                    {
-                        _Spectator = value;
-
-                        NotifyPropertyChanged(nameof(Spectator));
-                    }
-                }
-
-                private int _TeamCT;
-
-                public int TeamCT
-                {
-                    get => _TeamCT;
-                    set
-                    {
-                        _TeamCT = value;
-
-                        NotifyPropertyChanged(nameof(TeamCT));
-                    }
-                }
-
-                private int _TeamT;
-
-                public int TeamT
-                {
-                    get => _TeamT;
-                    set
-                    {
-                        _TeamT = value;
-
-                        NotifyPropertyChanged(nameof(TeamT));
                     }
                 }
 
@@ -759,12 +720,8 @@ namespace Granger
                 public void Reset()
                 {
                     Map = null;
-                    Round = 0;
-                    TeamCT = 0;
-                    TeamT = 0;
-                    Spectator = 0;
 
-                    this.Count += 1;
+                    Count += 1;
                 }
 
                 public event PropertyChangedEventHandler? PropertyChanged;
@@ -1294,6 +1251,11 @@ namespace Granger
 
         private async Task Init()
         {
+            Auto.GameStateListener.Map = "DE_DIZZY";
+            Auto.GameStateListener.Count = 12;
+            Auto.GameStateListener.Watch = new Stopwatch();
+            Auto.GameStateListener.Watch.Start();
+
             if (Auto.Sandbox)
             {
                 if (Auto.Config!.BattleEncoderShirase.ShouldSerializeDirectory())
@@ -2465,44 +2427,51 @@ namespace Granger
                 .Select(x => CultureInfo.GetCultureInfo(x.Name))
                 .ToList();
 
-            if (CultureList.Contains(Auto.Config.Steam.Culture)) return;
-
-            if (CultureList.Count == 1)
+            if (CultureList.Contains(Auto.Config.Steam.Culture))
             {
-                Auto.Config.Steam.Culture = CultureList[0];
+
             }
             else
             {
-                var Selection = new Selection(CultureList
-                    .Select(x => x.Name)
-                    .ToList(), false)
+                if (CultureList.Count == 1)
                 {
-                    Owner = this
-                };
-
-                if (Selection.ShowDialog() ?? false)
+                    Auto.Config.Steam.Culture = CultureList[0];
+                }
+                else
                 {
-                    var T = Selection.Auto.Dictionary.Where(x => x.Value);
-
-                    if (T.Any())
+                    var Selection = new Selection(CultureList
+                        .Select(x => x.Name)
+                        .ToList(), false)
                     {
-                        foreach (var X in T)
+                        Owner = this
+                    };
+
+                    if (Selection.ShowDialog() ?? false)
+                    {
+                        var T = Selection.Auto.Dictionary.Where(x => x.Value);
+
+                        if (T.Any())
                         {
-                            Auto.Config.Steam.Culture = new CultureInfo(X.Key);
+                            foreach (var X in T)
+                            {
+                                Auto.Config.Steam.Culture = new CultureInfo(X.Key);
+                            }
+                        }
+                        else
+                        {
+                            Auto.Config.Steam.Culture = CultureList[0];
                         }
                     }
-                    else
-                    {
-                        Auto.Config.Steam.Culture = CultureList[0];
-                    }
                 }
+
+                Auto.Config.Save();
             }
 
             CultureInfo.CurrentCulture = Auto.Config.Steam.Culture;
 
             Language = XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag);
 
-            Auto.Config!.Update(IConfig.EUpdate.Storage, IConfig.EUpdate.Audit);
+            Auto.Config.Update(IConfig.EUpdate.Storage, IConfig.EUpdate.Audit);
         }
 
         #endregion
@@ -2720,9 +2689,9 @@ namespace Granger
             Auto.Config!.Update(IConfig.EUpdate.Audit);
         }
 
-        private void Order_Click(object sender, RoutedEventArgs e)
+        private void Count_Click(object sender, RoutedEventArgs e)
         {
-            Auto.Order = !Auto.Order;
+            Auto.Count = !Auto.Count;
 
             Auto.Config!.Update(IConfig.EUpdate.Audit);
         }
@@ -3272,6 +3241,17 @@ namespace Granger
                     Account.Bin.GameStateListener.Death = GameState.Player.MatchStats.Deaths;
                     Account.Bin.GameStateListener.Score = GameState.Player.MatchStats.Score;
                     Account.Bin.GameStateListener.Team = GameState.Player.Team;
+
+                    if (Account.Bin.GameStateListener.List.ContainsKey(Auto.GameStateListener.Count))
+                    {
+                        Account.Bin.GameStateListener.List[Auto.GameStateListener.Count] = GameState.Player.MatchStats.Kills;
+                    }
+                    else
+                    {
+                        Account.Bin.GameStateListener.List.Add(Auto.GameStateListener.Count, GameState.Player.MatchStats.Kills);
+                    }
+
+                    Account.Bin.GameStateListener.Update();
                 }
 
                 #endregion
@@ -3297,19 +3277,17 @@ namespace Granger
                     {
                         case MapPhase.Live:
                             Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
-                            Auto.GameStateListener.Round = GameState.Map.Round;
-                            Auto.GameStateListener.Spectator = GameState.Map.CurrentSpectators;
-                            Auto.GameStateListener.TeamCT = GameState.Map.TeamCT.Score;
-                            Auto.GameStateListener.TeamT = GameState.Map.TeamT.Score;
+                            Auto.GameStateListener.Warmup = false;
+                            Auto.GameStateListener.GameOver = false;
 
                             break;
 
                         case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
-                            Auto.GameStateListener.Watch = new Stopwatch();
-                            Auto.GameStateListener.Watch.Start();
 
                             Auto.GameStateListener.Warmup = true;
-                            Auto.GameStateListener.GameOver = false;
+
+                            Auto.GameStateListener.Watch = new Stopwatch();
+                            Auto.GameStateListener.Watch.Start();
 
                             if (Auto.Inventory.Enabled)
                             {
@@ -3326,15 +3304,14 @@ namespace Granger
 
                         case MapPhase.GameOver when !Auto.GameStateListener.GameOver:
 
+                            Auto.GameStateListener.GameOver = true;
+
                             if (Auto.GameStateListener.Watch is not null)
                             {
                                 Auto.GameStateListener.Watch.Stop();
 
                                 Auto.GameStateListener.Watch = null;
                             }
-
-                            Auto.GameStateListener.GameOver = true;
-                            Auto.GameStateListener.Warmup = false;
 
                             if (Auto.Inventory.Enabled)
                             {
@@ -3354,7 +3331,6 @@ namespace Granger
                     Auto.GameStateListener.Update();
 
                     Auto.Config.Update(IConfig.EUpdate.GameStateListener);
-
                 }
             }
             catch (Exception e)

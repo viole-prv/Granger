@@ -2659,6 +2659,31 @@ namespace Granger
                         }
                     }
 
+                    private Dictionary<int, int> _List = new();
+
+                    [JsonIgnore]
+                    public Dictionary<int, int> List
+                    {
+                        get => _List;
+                        set
+                        {
+                            _List = value;
+
+                            NotifyPropertyChanged(nameof(List));
+                        }
+                    }
+
+                    [JsonIgnore]
+                    public int Sum
+                    {
+                        get => List.Values.Sum();
+                    }
+
+                    public void Update()
+                    {
+                        NotifyPropertyChanged(nameof(Sum));
+                    }
+
                     public void Reset()
                     {
                         Kill = 0;
@@ -3271,7 +3296,7 @@ namespace Granger
                 {
                     #region RANK
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(RANK))]
                     public string? I_RANK { get; set; }
 
                     [JsonIgnore]
@@ -3292,7 +3317,7 @@ namespace Granger
 
                     #region RANK TYPE
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(RANK_TYPE))]
                     public string? I_RANK_TYPE { get; set; }
 
                     [JsonIgnore]
@@ -3313,7 +3338,7 @@ namespace Granger
 
                     #region WIN
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(WIN))]
                     public string? I_WIN { get; set; }
 
                     [JsonIgnore]
@@ -3334,7 +3359,7 @@ namespace Granger
 
                     #region LEVEL
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(LEVEL))]
                     public string? I_LEVEL { get; set; }
 
                     [JsonIgnore]
@@ -3355,7 +3380,7 @@ namespace Granger
 
                     #region XP
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(XP))]
                     public string? I_XP { get; set; }
 
                     [JsonIgnore]
@@ -3376,7 +3401,7 @@ namespace Granger
 
                     #region PRIME
 
-                    [JsonProperty]
+                    [JsonProperty(nameof(PRIME))]
                     public string? I_PRIME { get; set; }
 
                     [JsonIgnore]
@@ -3917,7 +3942,7 @@ namespace Granger
                         .Where(v => v.Visibility)
                         .Select(v => new { v.Value.Name, v.Value.Price }));
 
-                Audit = X
+                var T = X
                     .GroupBy(x => x.Name)
                     .Select(x => new IAudit(
                         x.Key,
@@ -3925,11 +3950,14 @@ namespace Granger
                         x.Count(),
                         Math.Round((double)x.Count() / X.Count() * 100, 2)
                     ))
-                    .OrderBy(x => Auto.Order
-                        ? x.Price
-                        : x.Count)
-                    .Reverse()
-                    .ToList();
+                    .OrderBy(x => x.Price);
+
+                if (Auto.Count)
+                {
+                    T = T.OrderBy(x => x.Count);
+                }
+
+                Audit = T.Reverse().ToList();
 
                 NotifyPropertyChanged(nameof(Revise));
             }

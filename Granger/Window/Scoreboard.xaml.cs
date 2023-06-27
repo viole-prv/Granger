@@ -16,6 +16,11 @@ namespace Granger
             DataContext = Auto;
         }
 
+        private void Switch_Click(object sender, RoutedEventArgs e)
+        {
+            Auto.GameStateListener.Switch = !Auto.GameStateListener.Switch;
+        }
+
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             var MainWindow = Application.Current.MainWindow;

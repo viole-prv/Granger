@@ -2202,7 +2202,7 @@
                                         Background="Transparent"
                                         BorderBrush="Transparent"
                                         BorderThickness="0"
-                                        Click="Order_Click"
+                                        Click="Count_Click"
                                         Focusable="False">
                                         <Button.Style>
                                             <Style BasedOn="{StaticResource Icon}" TargetType="{x:Type Button}">
@@ -2217,7 +2217,7 @@
                                             <Image.Style>
                                                 <Style TargetType="{x:Type Image}">
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Order}" Value="True">
+                                                        <DataTrigger Binding="{Binding Count}" Value="False">
                                                             <Setter Property="Source">
                                                                 <Setter.Value>
                                                                     <DrawingImage>
@@ -2230,7 +2230,7 @@
                                                                 </Setter.Value>
                                                             </Setter>
                                                         </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Order}" Value="False">
+                                                        <DataTrigger Binding="{Binding Count}" Value="True">
                                                             <Setter Property="Source">
                                                                 <Setter.Value>
                                                                     <DrawingImage>
