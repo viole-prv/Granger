@@ -66,11 +66,6 @@ namespace Granger
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        public static void SwitchInputMethod(IntPtr hWnd)
-        {
-            PostMessage(hWnd, 0x50, (IntPtr)1, (IntPtr)LoadKeyboardLayout("00000409", 1));
-        }
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern uint MapVirtualKey(uint uCode, uint uMapType);
 

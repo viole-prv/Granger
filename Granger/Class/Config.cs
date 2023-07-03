@@ -331,9 +331,25 @@ namespace Granger
 
         public enum EResolution : byte
         {
-            Large,
-            N1
+            [Description("Стандарт")]
+            Default
         }
+
+        private EResolution _Resolution = EResolution.Default;
+
+        [JsonProperty]
+        public EResolution Resolution
+        {
+            get => _Resolution;
+            set
+            {
+                _Resolution = value;
+
+                NotifyPropertyChanged(nameof(Resolution));
+            }
+        }
+
+        public bool ShouldSerializeResolution() => Resolution != EResolution.Default;
 
         public class IResolution
         {
@@ -367,18 +383,13 @@ namespace Granger
             }
         }
 
-        private EResolution _Resolution = EResolution.N1;
-
-        [JsonProperty]
-        public EResolution Resolution
+        public IResolution? GetResolution()
         {
-            get => _Resolution;
-            set
+            return Resolution switch
             {
-                _Resolution = value;
-
-                NotifyPropertyChanged(nameof(Resolution));
-            }
+                EResolution.Default => new(EResolution.Default, new(380, 255, true)),
+                _ => null
+            };
         }
 
         #endregion
@@ -2259,7 +2270,7 @@ namespace Granger
                                 {
                                     if (X.HasValue)
                                     {
-                                        var Date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, X.Value.Day);
+                                        var Date = new DateTime(DateTime.Now.Year, X.Value.Month, X.Value.Day);
 
                                         int Hour = 4;
                                         int Day = (DayOfWeek.Wednesday - Date.DayOfWeek + 7) % 7;
@@ -2788,23 +2799,15 @@ namespace Granger
 
                 public class ILocation
                 {
-                    #region Cordiant
+                    [JsonProperty]
+                    public int? X { get; set; }
 
-                    public class ICordiant
-                    {
-                        [JsonProperty]
-                        public int X { get; set; }
-
-                        [JsonProperty]
-                        public int Y { get; set; }
-                    }
+                    public bool ShouldSerializeX() => X.HasValue;
 
                     [JsonProperty]
-                    public ICordiant? Cordiant { get; set; }
+                    public int? Y { get; set; }
 
-                    public bool ShouldSerializeCordiant() => Cordiant is not null;
-
-                    #endregion
+                    public bool ShouldSerializeY() => Y.HasValue;
 
                     [JsonProperty]
                     public int? Index { get; set; }
@@ -2818,9 +2821,9 @@ namespace Granger
                 }
 
                 [JsonProperty]
-                public ILocation? Location { get; set; }
+                public ILocation Location { get; set; } = new();
 
-                public bool ShouldSerializeLocation() => Location is not null && (Location.ShouldSerializeCordiant() || Location.ShouldSerializeIndex() || Location.ShouldSerializeUse());
+                public bool ShouldSerializeLocation() => Location.ShouldSerializeX() || Location.ShouldSerializeY() || Location.ShouldSerializeIndex() || Location.ShouldSerializeUse();
 
                 #endregion
 
@@ -2965,7 +2968,7 @@ namespace Granger
                         }
                     }
 
-                    public bool ShouldSerializeCluster() => Cluster is not null && Cluster.Any(x => x.ShouldSerializeDate() || x.ShouldSerializeID() || x.ShouldSerializeName() || x.ShouldSerializeIcon() || x.ShouldSerializePrice() || x.ShouldSerializeTrade());
+                    public bool ShouldSerializeCluster() => Cluster.Any(x => x.ShouldSerializeDate() || x.ShouldSerializeID() || x.ShouldSerializeName() || x.ShouldSerializeIcon() || x.ShouldSerializePrice() || x.ShouldSerializeTrade());
 
                     #endregion
 
@@ -2995,7 +2998,7 @@ namespace Granger
 
                     GameStateListener.Reset();
                     Window = null;
-                    Location = null;
+                    Location = new();
 
                     if (Inventory)
                     {
@@ -3076,14 +3079,11 @@ namespace Granger
                                 {
                                     Account.Animation.Any(IAnimation.EValue.Close, true);
 
-                                    if (Account.Bin.Location is not null && Auto.Location is not null)
+                                    if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
                                     {
-                                        if (Account.Bin.Location.Index.HasValue && Auto.Location.Count >= Account.Bin.Location.Index)
+                                        foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
                                         {
-                                            foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
-                                            {
-                                                X.Use = false;
-                                            }
+                                            X.Use = false;
                                         }
                                     }
 
@@ -3215,14 +3215,11 @@ namespace Granger
                                                 {
                                                     Account.Bin = _BIN;
 
-                                                    if (Account.Bin.Location is not null && Auto.Location is not null)
+                                                    if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
                                                     {
-                                                        if (Account.Bin.Location.Index.HasValue && Auto.Location.Count >= Account.Bin.Location.Index)
+                                                        foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
                                                         {
-                                                            foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
-                                                            {
-                                                                X.Use = true;
-                                                            }
+                                                            X.Use = true;
                                                         }
                                                     }
                                                 }

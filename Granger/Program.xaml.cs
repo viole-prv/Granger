@@ -699,6 +699,32 @@ namespace Granger
                     }
                 }
 
+                private MapPhase? _MapPhase;
+
+                public MapPhase? MapPhase
+                {
+                    get => _MapPhase;
+                    set
+                    {
+                        _MapPhase = value;
+
+                        NotifyPropertyChanged(nameof(MapPhase));
+                    }
+                }
+
+                private RoundPhase? _RoundPhase;
+
+                public RoundPhase? RoundPhase
+                {
+                    get => _RoundPhase;
+                    set
+                    {
+                        _RoundPhase = value;
+
+                        NotifyPropertyChanged(nameof(RoundPhase));
+                    }
+                }
+
                 private int _Count;
 
                 public int Count
@@ -872,12 +898,11 @@ namespace Granger
                     .ToList();
             }
 
-            public static List<IConfig.IResolution> Resolution
+            public static List<IConfig.EResolution> Resolution
             {
-                get => new()
-                {
-                    new(IConfig.EResolution.N1, new(380, 255, true))
-                };
+                get => Enum.GetValues(typeof(IConfig.EResolution))
+                    .Cast<IConfig.EResolution>()
+                    .ToList();
             }
 
             public static List<IConfig.ESort> Sort
@@ -887,9 +912,9 @@ namespace Granger
                     .ToList();
             }
 
-            private List<IConfig.IAccount.IBin.ILocation>? _Location;
+            private List<IConfig.IAccount.IBin.ILocation> _Location = new();
 
-            public List<IConfig.IAccount.IBin.ILocation>? Location
+            public List<IConfig.IAccount.IBin.ILocation> Location
             {
                 get => _Location;
                 set
@@ -1251,11 +1276,6 @@ namespace Granger
 
         private async Task Init()
         {
-            Auto.GameStateListener.Map = "DE_DIZZY";
-            Auto.GameStateListener.Count = 12;
-            Auto.GameStateListener.Watch = new Stopwatch();
-            Auto.GameStateListener.Watch.Start();
-
             if (Auto.Sandbox)
             {
                 if (Auto.Config!.BattleEncoderShirase.ShouldSerializeDirectory())
@@ -2243,171 +2263,152 @@ namespace Granger
 
         private static void Sort()
         {
-            if (Auto.Config == null) return;
-
-            var AccountList = Auto.Config.AccountList.OrderBy(x => x.Login);
-
-            foreach (var X in AccountList)
+            if (Auto.Config is not null)
             {
-                X.Visibility = true;
+                var AccountList = Auto.Config.AccountList.OrderBy(x => x.Login);
+
+                foreach (var X in AccountList)
+                {
+                    X.Visibility = true;
+                }
+
+                switch (Auto.Config.Sort)
+                {
+                    case IConfig.ESort.None:
+                        Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(AccountList);
+
+                        break;
+
+                    case IConfig.ESort.Launch:
+                        Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
+                            Auto.Sandbox
+                                ? AccountList.OrderBy(x => x.Setup.Date.Left)
+                                : AccountList.OrderBy(x => x.Setup.Date.Launch).Reverse());
+
+                        break;
+                }
+
+                Auto.Config.Save();
             }
-
-            switch (Auto.Config.Sort)
-            {
-                case IConfig.ESort.None:
-                    Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(AccountList);
-
-                    break;
-
-                case IConfig.ESort.Launch:
-                    Auto.Config.AccountList = new ObservableCollection<IConfig.IAccount>(
-                        Auto.Sandbox
-                            ? AccountList.OrderBy(x => x.Setup.Date.Left)
-
-                            : AccountList
-                                .OrderBy(x => x.Setup.Date.Launch)
-                                .Reverse());
-
-                    break;
-            }
-
-            Auto.Config.Save();
         }
 
         #endregion
 
         #region Location
 
-        private void Location_SelectionChanged(object sender, SelectionChangedEventArgs e) => Location();
+        private void Resolution_SelectionChanged(object sender, SelectionChangedEventArgs e) => Resolution();
 
-        private static void Location()
+        private static void Resolution()
         {
             if (Auto.Config is not null)
             {
-                var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config.Resolution);
+                var Resolution = Auto.Config.GetResolution();
 
                 if (Resolution is not null)
                 {
                     Logger.LogGenericDebug($"Ширина: {Resolution.Dimension.Width}, Высота: {Resolution.Dimension.Height}.");
 
-                    var X = Location(Resolution.Dimension);
-
-                    if (X is not null)
+                    try
                     {
-                        Auto.Location = X;
-                    }
-                }
-                else
-                {
-                    Logger.LogGenericError($"Значение переменной \"{nameof(Resolution)}\" или \"{nameof(Resolution.Dimension)}\" не может быть нулевым");
-                }
-            }
-        }
+                        int Width = (int)SystemParameters.WorkArea.Width;
+                        int Height = (int)SystemParameters.WorkArea.Height;
 
-        public static List<IConfig.IAccount.IBin.ILocation>? Location(IConfig.IResolution.IDimension Dimension)
-        {
-            var List = new List<IConfig.IAccount.IBin.ILocation>();
+                        int D_Width = Resolution.Dimension.Width;
+                        int D_Height = Resolution.Dimension.Height;
 
-            try
-            {
-                int Width = (int)SystemParameters.WorkArea.Width;
-                int Height = (int)SystemParameters.WorkArea.Height;
-
-                int D_Width = Dimension.Width;
-                int D_Height = Dimension.Height;
-
-                if (Dimension.Border)
-                {
-                    D_Height += 25;
-                }
-
-                int H = Math.Abs(Width / D_Width);
-                int V = Math.Abs(Height / D_Height);
-
-                int _ = H * V;
-
-                if (_ > 0)
-                {
-                    #region Width
-
-                    int T_Width = 0;
-
-                    int[] A_Width = new int[_];
-
-                    for (int i = 1; i < A_Width.Length; i++)
-                    {
-                        T_Width++;
-
-                        int X = (D_Width * T_Width) + T_Width;
-
-                        if (X > Width - D_Width)
+                        if (Resolution.Dimension.Border)
                         {
-                            T_Width = 0;
-
-                            A_Width[i] = 0;
+                            D_Height += 25;
                         }
-                        else
+
+                        int H = Math.Abs(Width / D_Width);
+                        int V = Math.Abs(Height / D_Height);
+
+                        int _ = H * V;
+
+                        if (_ > 0)
                         {
-                            A_Width[i] = X;
-                        }
-                    }
+                            #region Width
 
-                    #endregion
+                            int T_Width = 0;
 
-                    #region Height
+                            int[] A_Width = new int[_];
 
-                    int T_Height = 0;
-
-                    int[] A_Height = new int[_];
-
-                    for (int i = 1; i < A_Height.Length; i++)
-                    {
-                        if ((i % H) == 0 || i == 0)
-                        {
-                            T_Height++;
-
-                            int X = (D_Height * T_Height) + T_Height;
-
-                            if (X > Height - D_Height) break;
-
-                            A_Height[i] = X;
-                        }
-                        else
-                        {
-                            A_Height[i] = A_Height[i - 1];
-                        }
-                    }
-
-                    #endregion
-
-                    for (int i = 0; i < _; i++)
-                    {
-                        List.Add(new IConfig.IAccount.IBin.ILocation
-                        {
-                            Index = i,
-                            Cordiant = new()
+                            for (int i = 1; i < A_Width.Length; i++)
                             {
-                                X = A_Width[i],
-                                Y = A_Height[i]
+                                T_Width++;
+
+                                int X = (D_Width * T_Width) + T_Width;
+
+                                if (X > Width - D_Width)
+                                {
+                                    T_Width = 0;
+
+                                    A_Width[i] = 0;
+                                }
+                                else
+                                {
+                                    A_Width[i] = X;
+                                }
                             }
-                        });
+
+                            #endregion
+
+                            #region Height
+
+                            int T_Height = 0;
+
+                            int[] A_Height = new int[_];
+
+                            for (int i = 1; i < A_Height.Length; i++)
+                            {
+                                if ((i % H) == 0 || i == 0)
+                                {
+                                    T_Height++;
+
+                                    int X = (D_Height * T_Height) + T_Height;
+
+                                    if (X > Height - D_Height) break;
+
+                                    A_Height[i] = X;
+                                }
+                                else
+                                {
+                                    A_Height[i] = A_Height[i - 1];
+                                }
+                            }
+
+                            #endregion
+
+                            Auto.Location.Clear();
+
+                            for (int i = 0; i < _; i++)
+                            {
+                                Auto.Location.Add(new IConfig.IAccount.IBin.ILocation
+                                {
+                                    Index = i,
+                                    X = A_Width[i],
+                                    Y = A_Height[i]
+                                });
+                            }
+
+                            Logger.LogGenericDebug($"Было сгенерировано всего {Auto.Location.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
+                        }
+                        else
+                        {
+                            Logger.LogGenericWarning("Произошла ошибка при расчете.");
+                        }
                     }
-
-                    Logger.LogGenericDebug($"Было сгенерировано всего {List.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
-
-                    return List;
+                    catch (Exception e)
+                    {
+                        Logger.LogGenericException(e);
+                    }
                 }
                 else
                 {
-                    Logger.LogGenericWarning("Произошла ошибка при расчете.");
+                    Logger.LogGenericError($"Значение переменной \"{nameof(Resolution)}\" не может быть нулевым");
                 }
             }
-            catch (Exception e)
-            {
-                Logger.LogGenericException(e);
-            }
-
-            return null;
         }
 
         #endregion
@@ -3231,8 +3232,6 @@ namespace Granger
 
                 if (Account == null) return;
 
-                Auto.GameStateListener.Token = Account.Login;
-
                 #region Game State Listener
 
                 if (GameState.Map.Phase == MapPhase.Warmup || GameState.Map.Phase == MapPhase.Live)
@@ -3272,11 +3271,13 @@ namespace Granger
                         }
                     });
 
+                    Auto.GameStateListener.Update();
 
                     switch (GameState.Map.Phase)
                     {
                         case MapPhase.Live:
                             Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
+
                             Auto.GameStateListener.Warmup = false;
                             Auto.GameStateListener.GameOver = false;
 
@@ -3320,7 +3321,9 @@ namespace Granger
 
                             Auto.GameStateListener.Reset();
 
-                            foreach (var X in Auto.Config.AccountList.Where(x => x.Bin.Launched))
+                            foreach (var X in Auto.Config!.AccountList
+                                .Where(x => x.Bin.Launched)
+                                .ToList())
                             {
                                 X.Bin.GameStateListener.Reset();
                             }
@@ -3328,7 +3331,8 @@ namespace Granger
                             break;
                     }
 
-                    Auto.GameStateListener.Update();
+                    Auto.GameStateListener.MapPhase = GameState.Map.Phase;
+                    Auto.GameStateListener.RoundPhase = GameState.Round.Phase;
 
                     Auto.Config.Update(IConfig.EUpdate.GameStateListener);
                 }
@@ -3350,7 +3354,7 @@ namespace Granger
                 .OrderBy(x => x.Bin.Location!.Index)
                 .ToList();
 
-            if (AccountList.Count == 0)
+            if (AccountList.Count < 10)
             {
                 Logger.LogGenericWarning("Не удалось запустить сборку лобби!");
 
@@ -3367,40 +3371,33 @@ namespace Granger
 
                     for (int i = 0; i < 2; i++)
                     {
-                        SendKey(Account.Bin.Window!.Handle, ConsoleKey.Escape);
+                        await SendKey(Account.Bin.Window!.Handle, ConsoleKey.Escape);
                     }
                 }
             }
 
             await Task.Delay(1000);
 
-            var T = AccountList
-                .Take(5)
-                .Select((x, i) => (Account: x, Index: i))
-                .ToList();
+            await Lobby(AccountList.Take(10));
+        }
 
-            foreach (var Account in T
-                .Select(x => x.Account)
+        private static async Task Lobby(IEnumerable<IConfig.IAccount> AccountList)
+        {
+            foreach (var Account in AccountList
                 .Where(x => string.IsNullOrEmpty(x.Setup.LobbyCode))
                 .ToList())
             {
                 if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
                 {
-                    await SetCursorPosition(Account,
-                        Account.Bin.Window!.Width.Value - 10,
-                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
-
-                    await SetCursorPosition(Account,
-                        Account.Bin.Window!.Width.Value - 75,
-                        Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
+                    await Lobby(Account);
 
                     await Task.Delay(1000);
 
                     while (string.IsNullOrEmpty(Account.Setup.LobbyCode))
                     {
                         await SetCursorPosition(Account,
-                            Account.Bin.Window!.Width.Value - 175,
-                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Code
+                            Account.Bin.Window.Width.Value - 175,
+                            Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Code
 
                         await Task.Delay(5000);
 
@@ -3414,11 +3411,11 @@ namespace Granger
 
                             Account.Setup.LobbyCode = LobbyCode;
 
-                            Auto.Config.Save();
+                            Auto.Config!.Save();
 
                             await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 150,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Close
+                                Account.Bin.Window.Width.Value - 150,
+                                Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 170)); // Lobby Close
                         }
                     }
                 }
@@ -3426,104 +3423,136 @@ namespace Granger
                 await Task.Delay(1000);
             }
 
-            foreach ((IConfig.IAccount Account, int Index) in T)
+            var T = AccountList
+                .Select((x, i) => (Account: x, Index: i))
+                .GroupBy(x => x.Index < 5)
+                .Select(x => x.Select(x => x.Account))
+                .ToList();
+
+            foreach (var X in T)
             {
-                if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
+                var List = X
+                    .Select((x, i) => (Account: x, Index: i))
+                    .ToList();
+
+                foreach ((IConfig.IAccount Account, int Index) in List)
                 {
-                    if (Index == 0)
+                    if (Account.Bin.Window!.Width.HasValue && Account.Bin.Window!.Height.HasValue)
                     {
-                        Auto.GameStateListener.Token = Account.Login.ToUpper();
-
-                        Helper.SwitchInputMethod(Account.Bin.Window.Handle);
-
-                        foreach (string? LobbyCode in T
-                            .Where(x => x.Index > 0)
-                            .Select(x => x.Account.Setup.LobbyCode)
-                            .ToList())
+                        if (Index == 0)
                         {
-                            if (string.IsNullOrEmpty(LobbyCode)) continue;
+                            Auto.GameStateListener.Token = Account.Login;
 
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 10,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
+                            await SwitchInputMethod(Account.Bin.Window.Handle);
 
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 75,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
-
-                            await Task.Delay(1000);
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 200,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Input
-
-                            await Task.Delay(500);
-
-                            foreach (char _ in LobbyCode.ToCharArray())
+                            foreach (string? LobbyCode in List
+                                .Where(x => x.Index > 0)
+                                .Select(x => x.Account.Setup.LobbyCode)
+                                .ToList())
                             {
-                                byte? Byte = Helper.ToHexChar(_);
+                                if (string.IsNullOrEmpty(LobbyCode)) continue;
 
-                                if (Byte == null) continue;
+                                await Lobby(Account);
 
-                                Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
+                                await Task.Delay(1000);
+
+                                await SetCursorPosition(Account,
+                                    Account.Bin.Window.Width.Value - 200,
+                                    Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Input
+
+                                await Task.Delay(500);
+
+                                foreach (char _ in LobbyCode.ToCharArray())
+                                {
+                                    byte? Byte = Helper.ToHexChar(_);
+
+                                    if (Byte == null) continue;
+
+                                    Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
+                                }
+
+                                await SetCursorPosition(Account,
+                                    Account.Bin.Window.Width.Value - 200,
+                                    Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Profile
+
+                                await Task.Delay(500);
+
+                                await SetCursorPosition(Account,
+                                    Account.Bin.Window.Width.Value - 80,
+                                    Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 140)); // Lobby Invite
+
+                                await SetCursorPosition(Account,
+                                    Account.Bin.Window.Width.Value - 150,
+                                    Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 180)); // Lobby Close
+
+                                await Task.Delay(1000);
                             }
-
+                        }
+                        else
+                        {
                             await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 200,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 150)); // Lobby Profile
-
-                            await Task.Delay(500);
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 80,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 140)); // Lobby Invite
-
-                            await SetCursorPosition(Account,
-                                Account.Bin.Window!.Width.Value - 150,
-                                Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 180)); // Lobby Close
-
-                            await Task.Delay(1000);
+                                Account.Bin.Window.Width.Value - 10,
+                                Account.Bin.Window.Height.Value - (Account.Bin.Window!.Height.Value - 95)); // Lobby Accept
                         }
                     }
-                    else
-                    {
-                        await SetCursorPosition(Account,
-                            Account.Bin.Window!.Width.Value - 10,
-                            Account.Bin.Window!.Height.Value - (Account.Bin.Window!.Height.Value - 95)); // Lobby Accept
-                    }
+
+                    await Task.Delay(2500);
                 }
 
                 await Task.Delay(2500);
             }
         }
 
-        private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
+        private static async Task Lobby(IConfig.IAccount Account)
         {
-            if (Account.Bin.Window!.X.HasValue && Account.Bin.Window!.Y.HasValue)
-            {
-                int X = Width + Account.Bin.Window!.X.Value;
-                int Y = Height + Account.Bin.Window!.Y.Value;
+            await SetCursorPosition(Account,
+                Account.Bin.Window!.Width!.Value - 10,
+                Account.Bin.Window!.Height!.Value - (Account.Bin.Window!.Height.Value - 85), true); // Lobby Hover
 
-                Account.SetForeground();
-
-                await Task.Delay(250);
-
-                Helper.SetCursorPosition(X, Y);
-
-                await Task.Delay(Hover ? 1000 : 500);
-
-                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
-            }
+            await SetCursorPosition(Account,
+                Account.Bin.Window!.Width!.Value - 75,
+                Account.Bin.Window!.Height!.Value - (Account.Bin.Window!.Height.Value - 100)); // Lobby Button
         }
 
-        private static void SendKey(IntPtr hWnd, ConsoleKey KeyCode)
+        private static async Task SwitchInputMethod(IntPtr hWnd)
         {
-            uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
-            uint _ = 1 | MapVirtualKey << 16;
+            await Task.Run(() => Helper.PostMessage(hWnd, 0x50, (IntPtr)1, (IntPtr)Helper.LoadKeyboardLayout("00000409", 1)));
+        }
 
-            Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
-            Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)_);
+        private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
+        {
+            await Task.Run(async () =>
+            {
+                if (Account.Bin.Window!.X.HasValue && Account.Bin.Window!.Y.HasValue)
+                {
+                    int X = Width + Account.Bin.Window!.X.Value;
+                    int Y = Height + Account.Bin.Window!.Y.Value;
+
+                    Account.SetForeground();
+
+                    await Task.Delay(250);
+
+                    Helper.SetCursorPosition(X, Y);
+
+                    await Task.Delay(Hover ? 1000 : 500);
+
+                    Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                }
+            });
+        }
+
+        private static async Task SendKey(IntPtr hWnd, ConsoleKey KeyCode)
+        {
+            await Task.Run(() =>
+            {
+                uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
+
+                uint T = 1 | MapVirtualKey << 16;
+
+                Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
+                Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
+            });
         }
 
         #endregion
@@ -4812,11 +4841,9 @@ namespace Granger
 
                                 if (File.Exists(CONFIG))
                                 {
-                                    var Resolution = IAuto.Resolution.FirstOrDefault(x => x.Value == Auto.Config!.Resolution);
+                                    var Resolution = Auto.Config.GetResolution();
 
-                                    const byte VIDEO_MODE_LINE = 84;
-
-                                    if (Resolution == null || !await SetVideoMode(CONFIG, VIDEO_MODE_LINE, Resolution.Dimension)) return false;
+                                    if (Resolution == null || !await SetResolution(CONFIG, Resolution.Dimension)) return false;
                                 }
                             }
 
@@ -4830,38 +4857,30 @@ namespace Granger
                             }
                             else
                             {
-                                if (Account.Bin.Location == null)
+                                if (!Account.Bin.ShouldSerializeLocation())
                                 {
-                                    if (Auto.Location == null)
-                                    {
-                                        Account.Logger.LogGenericError($"Значение переменной \"{nameof(Auto.Location)}\" не может быть нулевым");
+                                    var T = Auto.Location
+                                        .SkipWhile(x => x.Use)
+                                        .ToList();
 
-                                        return false;
-                                    }
-                                    else if (Auto.Location.All(x => x.Use))
+                                    if (T.Count == 0)
                                     {
                                         Account.Logger.LogGenericWarning("Так много аккаунтов не поместятся на одном экране, закройте аккаунты или измените разрешение экрана!");
 
                                         return false;
                                     }
 
-                                    var FirstOrDefault = Auto.Location.FirstOrDefault(x => !x.Use);
-
-                                    if (FirstOrDefault == null)
+                                    foreach (var Location in T)
                                     {
-                                        Logger.LogGenericError($"Значение переменной \"{nameof(FirstOrDefault)}\" не может быть нулевым!");
+                                        Location.Use = true;
 
-                                        return false;
-                                    }
-                                    else
-                                    {
-                                        FirstOrDefault.Use = true;
+                                        Account.Logger.LogGenericDebug($"[LOCATION] <- {JsonConvert.SerializeObject(new { Location.Index, Location.X, Location.Y }, Formatting.Indented)}");
 
-                                        Account.Logger.LogGenericDebug($"[LOCATION] <- {JsonConvert.SerializeObject(new { FirstOrDefault.Index, FirstOrDefault.Cordiant!.X, FirstOrDefault.Cordiant!.Y }, Formatting.Indented)}");
-
-                                        Account.Bin.Location = FirstOrDefault;
+                                        Account.Bin.Location = Location;
 
                                         Account.Update();
+
+                                        break;
                                     }
                                 }
 
@@ -4877,7 +4896,7 @@ namespace Granger
                                                 ? $"+con_logfile log\\{Account.Login}.log"
                                                 : "",
 
-                                            $"-w 640 -h 480 -x {Account.Bin.Location.Cordiant!.X} -y {Account.Bin.Location.Cordiant!.Y}",
+                                            $"-w 640 -h 480 -x {Account.Bin.Location.X} -y {Account.Bin.Location.Y}",
                                         })
                                     });
 
@@ -4999,9 +5018,11 @@ namespace Granger
             return false;
         }
 
-        #region Video Mode
+        #region Resolution
 
-        private static Task<bool> SetVideoMode(string CONFIG, byte VIDEO_MODE_LINE, IConfig.IResolution.IDimension Dimension)
+        private const byte RESOLUTION_LINE = 84;
+
+        private static Task<bool> SetResolution(string CONFIG, IConfig.IResolution.IDimension Dimension)
         {
             try
             {
@@ -5009,11 +5030,11 @@ namespace Granger
                 {
                     Helper.SetFileReadAccess(CONFIG, false);
 
-                    Helper.LineChanger($"mat_setvideomode {Dimension.Width} {Dimension.Height} 1", CONFIG, VIDEO_MODE_LINE);
+                    Helper.LineChanger($"mat_setvideomode {Dimension.Width} {Dimension.Height} 1", CONFIG, RESOLUTION_LINE);
                 }
                 else
                 {
-                    Helper.LineChanger($"mat_setvideomode {Dimension.Width} {Dimension.Height} 1", CONFIG, VIDEO_MODE_LINE);
+                    Helper.LineChanger($"mat_setvideomode {Dimension.Width} {Dimension.Height} 1", CONFIG, RESOLUTION_LINE);
                 }
 
                 Helper.SetFileReadAccess(CONFIG, true);
@@ -5291,13 +5312,6 @@ namespace Granger
 
             try
             {
-                if (Account.Animation.Any(IConfig.IAccount.IAnimation.EValue.Close))
-                {
-                    Account.Logger.LogGenericWarning("Аккаунт ожидает закрытия, функция недоступна!");
-
-                    return Task.FromResult(false);
-                }
-
                 Account.Bin.Show = !Account.Bin.Show;
 
                 Account.Update();

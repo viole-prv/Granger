@@ -1112,28 +1112,14 @@
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Top"
                                         BorderThickness="0,0,0,1"
-                                        DisplayMemberPath="Value"
                                         ItemsSource="{Binding DataContext.Resolution, ElementName=MetroWindow}"
-                                        SelectedValue="{Binding Resolution, UpdateSourceTrigger=PropertyChanged}"
-                                        SelectedValuePath="Value"
-                                        SelectionChanged="Location_SelectionChanged">
-                                        <ComboBox.ItemContainerStyle>
-                                            <Style BasedOn="{StaticResource MahApps.Styles.ComboBoxItem}" TargetType="{x:Type ComboBoxItem}">
-                                                <Setter Property="ToolTip">
-                                                    <Setter.Value>
-                                                        <TextBlock
-                                                            MaxWidth="236"
-                                                            MaxHeight="80"
-                                                            HorizontalAlignment="Left"
-                                                            VerticalAlignment="Top"
-                                                            Background="Transparent"
-                                                            Style="{StaticResource TextBlock}"
-                                                            Text="{Binding Dimension}"
-                                                            TextWrapping="Wrap" />
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </ComboBox.ItemContainerStyle>
+                                        SelectedItem="{Binding Resolution, UpdateSourceTrigger=PropertyChanged}"
+                                        SelectionChanged="Resolution_SelectionChanged">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Style="{StaticResource TextBlock}" Text="{Binding ., Converter={StaticResource EnumerationDescriptionConverter}}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
                                     </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2">

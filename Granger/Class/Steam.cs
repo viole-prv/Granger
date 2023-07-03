@@ -62,29 +62,6 @@ namespace Granger
 
         public static readonly byte COMPETITIVE = 6;
 
-        public static readonly Bitmap[] Competitive = new[]
-        {
-            Properties.Resources.Unranked,
-            Properties.Resources.Silver_1,
-            Properties.Resources.Silver_2,
-            Properties.Resources.Silver_3,
-            Properties.Resources.Silver_4,
-            Properties.Resources.Silver_5,
-            Properties.Resources.Silver_6,
-            Properties.Resources.Gold_Nova_1,
-            Properties.Resources.Gold_Nova_2,
-            Properties.Resources.Gold_Nova_3,
-            Properties.Resources.Gold_Nova_4,
-            Properties.Resources.Master_Guardian_1,
-            Properties.Resources.Master_Guardian_2,
-            Properties.Resources.Master_Guardian_3,
-            Properties.Resources.Distinguished_Master_Guardian,
-            Properties.Resources.Legendary_Eagle,
-            Properties.Resources.Legendary_Eagle_Master,
-            Properties.Resources.Supreme_Master_First_Class,
-            Properties.Resources.Global_Elite
-        };
-
         public static readonly Bitmap[] Profile = new[]
         {
             Properties.Resources.Recruit_Rank_1,

@@ -8,10 +8,10 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Granger.Properties {
-    using System;
-    
-    
+namespace Granger.Properties
+{
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -22,174 +22,208 @@ namespace Granger.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Resources {
-        
+    public class Resources
+    {
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Resources() {
+        internal Resources()
+        {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        public static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Granger.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
-            get {
+        public static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Brigadier_General_Rank_36 {
-            get {
+        public static System.Drawing.Bitmap Brigadier_General_Rank_36
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Brigadier General Rank 36", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Captain_Rank_25 {
-            get {
+        public static System.Drawing.Bitmap Captain_Rank_25
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Captain Rank 25", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Captain_Rank_26 {
-            get {
+        public static System.Drawing.Bitmap Captain_Rank_26
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Captain Rank 26", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Captain_Rank_27 {
-            get {
+        public static System.Drawing.Bitmap Captain_Rank_27
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Captain Rank 27", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Captain_Rank_28 {
-            get {
+        public static System.Drawing.Bitmap Captain_Rank_28
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Captain Rank 28", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Colonel_Rank_33 {
-            get {
+        public static System.Drawing.Bitmap Colonel_Rank_33
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Colonel Rank 33", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Colonel_Rank_34 {
-            get {
+        public static System.Drawing.Bitmap Colonel_Rank_34
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Colonel Rank 34", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Colonel_Rank_35 {
-            get {
+        public static System.Drawing.Bitmap Colonel_Rank_35
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Colonel Rank 35", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Corporal_Rank_5 {
-            get {
+        public static System.Drawing.Bitmap Corporal_Rank_5
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Corporal Rank 5", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Corporal_Rank_6 {
-            get {
+        public static System.Drawing.Bitmap Corporal_Rank_6
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Corporal Rank 6", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Corporal_Rank_7 {
-            get {
+        public static System.Drawing.Bitmap Corporal_Rank_7
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Corporal Rank 7", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Corporal_Rank_8 {
-            get {
+        public static System.Drawing.Bitmap Corporal_Rank_8
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Corporal Rank 8", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static byte[] CSGO_CONFIG {
-            get {
+        public static byte[] CSGO_CONFIG
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("CSGO_CONFIG", resourceCulture);
                 return ((byte[])(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to &quot;VideoConfig&quot;
         ///{
@@ -209,489 +243,359 @@ namespace Granger.Properties {
         ///	&quot;setting.mat_motion_blur_enabled&quot;		&quot;0&quot;
         ///	&quot;setting.mat_texturestreamin [rest of string was truncated]&quot;;.
         /// </summary>
-        public static string CSGO_VIDEO {
-            get {
+        public static string CSGO_VIDEO
+        {
+            get
+            {
                 return ResourceManager.GetString("CSGO_VIDEO", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Distinguished_Master_Guardian {
-            get {
-                object obj = ResourceManager.GetObject("Distinguished Master Guardian", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap General_Rank_39 {
-            get {
+        public static System.Drawing.Bitmap General_Rank_39
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("General Rank 39", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Global_Elite {
-            get {
-                object obj = ResourceManager.GetObject("Global Elite", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Global_General_Rank_40 {
-            get {
+        public static System.Drawing.Bitmap Global_General_Rank_40
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Global General Rank 40", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Gold_Nova_1 {
-            get {
-                object obj = ResourceManager.GetObject("Gold Nova 1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Gold_Nova_2 {
-            get {
-                object obj = ResourceManager.GetObject("Gold Nova 2", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Gold_Nova_3 {
-            get {
-                object obj = ResourceManager.GetObject("Gold Nova 3", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Gold_Nova_4 {
-            get {
-                object obj = ResourceManager.GetObject("Gold Nova 4", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Legendary_Eagle {
-            get {
-                object obj = ResourceManager.GetObject("Legendary Eagle", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Legendary_Eagle_Master {
-            get {
-                object obj = ResourceManager.GetObject("Legendary Eagle Master", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Lieutenant_General_Rank_38 {
-            get {
+        public static System.Drawing.Bitmap Lieutenant_General_Rank_38
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Lieutenant General Rank 38", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Lieutenant_Rank_21 {
-            get {
+        public static System.Drawing.Bitmap Lieutenant_Rank_21
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Lieutenant Rank 21", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Lieutenant_Rank_22 {
-            get {
+        public static System.Drawing.Bitmap Lieutenant_Rank_22
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Lieutenant Rank 22", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Lieutenant_Rank_23 {
-            get {
+        public static System.Drawing.Bitmap Lieutenant_Rank_23
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Lieutenant Rank 23", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Lieutenant_Rank_24 {
-            get {
+        public static System.Drawing.Bitmap Lieutenant_Rank_24
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Lieutenant Rank 24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Major_General_Rank_37 {
-            get {
+        public static System.Drawing.Bitmap Major_General_Rank_37
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Major General Rank 37", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Major_Rank_29 {
-            get {
+        public static System.Drawing.Bitmap Major_Rank_29
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Major Rank 29", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Major_Rank_30 {
-            get {
+        public static System.Drawing.Bitmap Major_Rank_30
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Major Rank 30", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Major_Rank_31 {
-            get {
+        public static System.Drawing.Bitmap Major_Rank_31
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Major Rank 31", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Major_Rank_32 {
-            get {
+        public static System.Drawing.Bitmap Major_Rank_32
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Major Rank 32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Master_Guardian_1 {
-            get {
-                object obj = ResourceManager.GetObject("Master Guardian 1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Master_Guardian_2 {
-            get {
-                object obj = ResourceManager.GetObject("Master Guardian 2", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Master_Guardian_3 {
-            get {
-                object obj = ResourceManager.GetObject("Master Guardian 3", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Master_Sergeant_Rank_13 {
-            get {
+        public static System.Drawing.Bitmap Master_Sergeant_Rank_13
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Master Sergeant Rank 13", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Master_Sergeant_Rank_14 {
-            get {
+        public static System.Drawing.Bitmap Master_Sergeant_Rank_14
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Master Sergeant Rank 14", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Master_Sergeant_Rank_15 {
-            get {
+        public static System.Drawing.Bitmap Master_Sergeant_Rank_15
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Master Sergeant Rank 15", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Master_Sergeant_Rank_16 {
-            get {
+        public static System.Drawing.Bitmap Master_Sergeant_Rank_16
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Master Sergeant Rank 16", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Recruit_Rank_1 {
-            get {
+        public static System.Drawing.Bitmap Recruit_Rank_1
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Recruit Rank 1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Recruit_Rank_2 {
-            get {
+        public static System.Drawing.Bitmap Recruit_Rank_2
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Recruit Rank 2", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Recruit_Rank_3 {
-            get {
+        public static System.Drawing.Bitmap Recruit_Rank_3
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Recruit Rank 3", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Recruit_Rank_4 {
-            get {
+        public static System.Drawing.Bitmap Recruit_Rank_4
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Recruit Rank 4", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Major_Rank_17 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Major_Rank_17
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Major Rank 17", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Major_Rank_18 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Major_Rank_18
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Major Rank 18", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Major_Rank_19 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Major_Rank_19
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Major Rank 19", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Major_Rank_20 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Major_Rank_20
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Major Rank 20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Rank_10 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Rank_10
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Rank 10", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Rank_11 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Rank_11
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Rank 11", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Rank_12 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Rank_12
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Rank 12", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Sergeant_Rank_9 {
-            get {
+        public static System.Drawing.Bitmap Sergeant_Rank_9
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("Sergeant Rank 9", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_1 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 1", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_2 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 2", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_3 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 3", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_4 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 4", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_5 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 5", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Silver_6 {
-            get {
-                object obj = ResourceManager.GetObject("Silver 6", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Supreme_Master_First_Class {
-            get {
-                object obj = ResourceManager.GetObject("Supreme Master First Class", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static byte[] TF2_CONFIG {
-            get {
+        public static byte[] TF2_CONFIG
+        {
+            get
+            {
                 object obj = ResourceManager.GetObject("TF2_CONFIG", resourceCulture);
                 return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Unranked {
-            get {
-                object obj = ResourceManager.GetObject("Unranked", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

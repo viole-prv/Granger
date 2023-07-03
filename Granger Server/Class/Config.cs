@@ -180,23 +180,15 @@ namespace GrangerServer
 
                 public class ILocation
                 {
-                    #region Cordiant
+                    [JsonProperty]
+                    public int? X { get; set; }
 
-                    public class ICordiant
-                    {
-                        [JsonProperty]
-                        public int X { get; set; }
-
-                        [JsonProperty]
-                        public int Y { get; set; }
-                    }
+                    public bool ShouldSerializeX() => X.HasValue;
 
                     [JsonProperty]
-                    public ICordiant? Cordiant { get; set; }
+                    public int? Y { get; set; }
 
-                    public bool ShouldSerializeCordiant() => Cordiant is not null;
-
-                    #endregion
+                    public bool ShouldSerializeY() => Y.HasValue;
 
                     [JsonProperty]
                     public int? Index { get; set; }
@@ -210,9 +202,9 @@ namespace GrangerServer
                 }
 
                 [JsonProperty]
-                public ILocation? Location { get; set; }
+                public ILocation Location { get; set; } = new();
 
-                public bool ShouldSerializeLocation() => Location is not null && (Location.ShouldSerializeCordiant() || Location.ShouldSerializeIndex() || Location.ShouldSerializeUse());
+                public bool ShouldSerializeLocation() => Location.ShouldSerializeX() || Location.ShouldSerializeY() || Location.ShouldSerializeIndex() || Location.ShouldSerializeUse();
 
                 #endregion
 
@@ -283,9 +275,9 @@ namespace GrangerServer
                     }
 
                     [JsonProperty]
-                    public List<ICluster>? Cluster { get; set; } = new();
+                    public List<ICluster> Cluster { get; set; } = new();
 
-                    public bool ShouldSerializeCluster() => Cluster?.Count > 0 && Cluster.Any(x => x.ShouldSerializeDate() || x.ShouldSerializeID() || x.ShouldSerializeName() || x.ShouldSerializeIcon() || x.ShouldSerializePrice() || x.ShouldSerializeTrade());
+                    public bool ShouldSerializeCluster() => Cluster.Any(x => x.ShouldSerializeDate() || x.ShouldSerializeID() || x.ShouldSerializeName() || x.ShouldSerializeIcon() || x.ShouldSerializePrice() || x.ShouldSerializeTrade());
 
                     #endregion
                 }
