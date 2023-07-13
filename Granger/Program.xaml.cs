@@ -2390,6 +2390,8 @@ namespace Granger
                                     X = A_Width[i],
                                     Y = A_Height[i]
                                 });
+
+                                if (Auto.Type == IAuto.EType.TF2) break;
                             }
 
                             Logger.LogGenericDebug($"Было сгенерировано всего {Auto.Location.Count} окон, по горизонтали - {H}, по вертикали - {V}.");
@@ -4180,7 +4182,7 @@ namespace Granger
                 {
                     if (Auto.Sandbox && Auto.Config!.Sort == IConfig.ESort.Launch)
                     {
-                        var DialogResult = await this.ShowMessageAsync("Предупреждение", "Вы точно ходите обновить дату?", MessageDialogStyle.AffirmativeAndNegative, new() { DialogMessageFontSize = 17, AffirmativeButtonText = "Продолжить", NegativeButtonText = "Отмена", AnimateHide = true, AnimateShow = true, ColorScheme = MetroDialogColorScheme.Theme });
+                        var DialogResult = await this.ShowMessageAsync("Предупреждение", "Вы точно ходите обновить время выпавшего предмета?", MessageDialogStyle.AffirmativeAndNegative, new() { DialogMessageFontSize = 17, AffirmativeButtonText = "Продолжить", NegativeButtonText = "Отмена", AnimateHide = true, AnimateShow = true, ColorScheme = MetroDialogColorScheme.Theme });
 
                         if (DialogResult == MessageDialogResult.Affirmative)
                         {
@@ -4872,7 +4874,10 @@ namespace Granger
 
                                     foreach (var Location in T)
                                     {
-                                        Location.Use = true;
+                                        if (Auto.Type == IAuto.EType.CSGO)
+                                        {
+                                            Location.Use = true;
+                                        }
 
                                         Account.Logger.LogGenericDebug($"[LOCATION] <- {JsonConvert.SerializeObject(new { Location.Index, Location.X, Location.Y }, Formatting.Indented)}");
 

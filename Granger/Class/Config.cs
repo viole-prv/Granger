@@ -3079,11 +3079,14 @@ namespace Granger
                                 {
                                     Account.Animation.Any(IAnimation.EValue.Close, true);
 
-                                    if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
+                                    if (Auto.Type == IAuto.EType.CSGO)
                                     {
-                                        foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
+                                        if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
                                         {
-                                            X.Use = false;
+                                            foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
+                                            {
+                                                X.Use = false;
+                                            }
                                         }
                                     }
 
@@ -3215,11 +3218,14 @@ namespace Granger
                                                 {
                                                     Account.Bin = _BIN;
 
-                                                    if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
+                                                    if (Auto.Type == IAuto.EType.CSGO)
                                                     {
-                                                        foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
+                                                        if (Account.Bin.ShouldSerializeLocation() && Auto.Location.Count >= Account.Bin.Location.Index)
                                                         {
-                                                            X.Use = true;
+                                                            foreach (var X in Auto.Location.Where(x => x.Index == Account.Bin.Location.Index))
+                                                            {
+                                                                X.Use = true;
+                                                            }
                                                         }
                                                     }
                                                 }
