@@ -80,7 +80,7 @@ namespace Granger
 
             public bool ShouldSerializeAPIKey() => !string.IsNullOrEmpty(APIKey);
 
-            private Steam.ECurrency _Currency = Granger.Steam.ECurrency.RUB;
+            private Steam.ECurrency _Currency = Granger.Steam.ECurrency.USD;
 
             [JsonProperty]
             public Steam.ECurrency Currency
@@ -94,9 +94,9 @@ namespace Granger
                 }
             }
 
-            public bool ShouldSerializeCurrency() => Currency != Granger.Steam.ECurrency.RUB;
+            public bool ShouldSerializeCurrency() => Currency != Granger.Steam.ECurrency.USD;
 
-            private CultureInfo _Culture = CultureInfo.GetCultureInfo("ru-RU");
+            private CultureInfo _Culture = CultureInfo.GetCultureInfo("en-US");
 
             [JsonProperty]
             public CultureInfo Culture
@@ -110,7 +110,7 @@ namespace Granger
                 }
             }
 
-            public bool ShouldSerializeCulture() => Culture != CultureInfo.GetCultureInfo("ru-RU");
+            public bool ShouldSerializeCulture() => Culture != CultureInfo.GetCultureInfo("en-US");
 
             public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -692,17 +692,17 @@ namespace Granger
 
             public void SetForeground()
             {
-                if (Bin.Window!.Handle == Helper.GetForegroundWindow()) return;
+                if (Bin.Window!.Handle == Native.GetForegroundWindow()) return;
 
-                if (Helper.IsIconic(Bin.Window!.Handle))
+                if (Native.IsIconic(Bin.Window!.Handle))
                 {
-                    if (!Helper.ShowWindowAsync(Bin.Window!.Handle, Helper.SW_RESTORE))
+                    if (!Native.ShowWindowAsync(Bin.Window!.Handle, Native.SW_RESTORE))
                     {
                         Logger.LogGenericWarning("Не удалось показать окно.");
                     }
                 }
 
-                if (!Helper.SetForegroundWindow(Bin.Window!.Handle))
+                if (!Native.SetForegroundWindow(Bin.Window!.Handle))
                 {
                     Logger.LogGenericWarning("Не удалось выдвинуть окно на передний план и активировать его.");
                 }
@@ -717,7 +717,7 @@ namespace Granger
                         .Where(x => x.MainWindowTitle == Login.ToUpper())
                         .ToList())
                     {
-                        if (Helper.GetWindowRect(X.MainWindowHandle, out Helper.RECT RECT))
+                        if (Native.GetWindowRect(X.MainWindowHandle, out Native.RECT RECT))
                         {
                             Bin.Window.Handle = X.MainWindowHandle;
                             Bin.Window.Setup(RECT);
@@ -1279,8 +1279,8 @@ namespace Granger
 
                     public class IResult
                     {
-                        [JsonProperty("sell_price_text", Required = Required.DisallowNull)]
-                        public string? Price { get; set; }
+                        [JsonProperty("sell_price", Required = Required.DisallowNull)]
+                        public decimal? Price { get; set; }
 
                         [JsonProperty("asset_description", Required = Required.DisallowNull)]
                         public Steam.IDescription? Description { get; set; }
@@ -2747,7 +2747,7 @@ namespace Granger
                         this.Handle = Handle;
                     }
 
-                    public void Setup(Helper.RECT RECT)
+                    public void Setup(Native.RECT RECT)
                     {
                         X = RECT.Left;
                         Y = RECT.Top;
@@ -3143,7 +3143,7 @@ namespace Granger
 
                                                     try
                                                     {
-                                                        if (!Helper.SetWindowText(Account.Bin.Window.Handle, Account.Login.ToUpper()))
+                                                        if (!Native.SetWindowText(Account.Bin.Window.Handle, Account.Login.ToUpper()))
                                                         {
                                                             Account.Logger.LogGenericWarning("Не удалось изменить название окна.");
                                                         }

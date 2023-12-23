@@ -91,7 +91,7 @@ namespace Granger
 
             if (Storage == null)
             {
-                return ("Глобальный конфиг равен нулю!", null);
+                return ("Место хранения равно нулю!", null);
             }
 
             Storage.Save();

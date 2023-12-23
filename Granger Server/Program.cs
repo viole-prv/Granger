@@ -163,7 +163,7 @@ namespace GrangerServer
                                     FileName = "cmd.exe",
                                     Arguments = string.Join(" ", new string[]
                                     {
-                                        $"/C \"{Steam}\" -vgui",
+                                        $"/C \"{Steam}\"",
                                         $"-login {Account.Login} {Account.Password}",
                                         $"-applaunch {AppID} -novid -nosound", Convert.ToString(Value?.Data)
                                     })

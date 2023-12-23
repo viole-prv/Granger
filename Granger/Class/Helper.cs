@@ -7,7 +7,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -18,63 +17,32 @@ namespace Granger
 {
     public partial class Helper
     {
-        public const int SW_RESTORE = 9;
-
-        public const int WM_KEYDOWN = 0x0100;
-        public const int WM_KEYUP = 0x0101;
-
-        public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
-        public const uint MOUSEEVENTF_LEFTUP = 0x0004;
-
-#pragma warning disable CA1401 // OnPrevious/Invokes should not be visible
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        public static extern bool SetWindowText(IntPtr hwnd, string lpString);
-
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("user32.dll")]
-        public static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool IsIconic(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
+        public static decimal? ToPrice(string _)
         {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
+            string[] Split = _.Split(' ');
+
+            if (Split.Length > 1)
+            {
+                string? Last = Split.LastOrDefault();
+                string? First = Split.FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(Last) && !string.IsNullOrEmpty(First))
+                {
+                    if (decimal.TryParse(First, NumberStyles.Currency,
+
+                        Last == "USD" ? CultureInfo.GetCultureInfo("en-US") :
+                        Last == "pуб." ? CultureInfo.GetCultureInfo("ru-RU") :
+                        Last == "TL" ? CultureInfo.GetCultureInfo("tr-TR") :
+
+                        CultureInfo.CurrentCulture, out decimal Price))
+                    {
+                        return Math.Ceiling(Price * 100);
+                    }
+                }
+            }
+
+            return null;
         }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern bool GetWindowRect(IntPtr hwnd, out RECT lpRect);
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        public static extern int LoadKeyboardLayout(string pwszKLID, uint Flags);
-
-        [DllImport("user32.dll", EntryPoint = "SetCursorPos", SetLastError = true)]
-        public static extern bool SetCursorPosition(int X, int Y);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern uint MapVirtualKey(uint uCode, uint uMapType);
-
-        [DllImport("user32.dll", EntryPoint = "mouse_event", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
-        public static extern void MouseEvent(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
-
-#pragma warning restore CA1401 // OnPrevious/Invokes should not be visible
-
-        public static readonly Random Random = new();
 
         public static void Shredder(DirectoryInfo X)
         {
@@ -217,23 +185,6 @@ namespace Granger
             }
         }
 
-        public static decimal? ToPrice(string _)
-        {
-            if (string.IsNullOrEmpty(_)) return null;
-
-            var Match = Regex.Matches(_, @"\d*[,\.]?(\d*)?").Where(x => x.Success);
-
-            if (Match.Any())
-            {
-                if (decimal.TryParse(string.Join("", Match.Select(x => x.Value)).TrimEnd(',').TrimEnd('.'), NumberStyles.Currency, CultureInfo.CurrentCulture, out decimal Price))
-                {
-                    return Price;
-                }
-            }
-
-            return null;
-        }
-
         public static bool SteamID32(string _)
         {
             return Regex.IsMatch(_, "^([0-9]{1,10})$");
@@ -281,6 +232,8 @@ namespace Granger
         {
             return _ + 76561197960265728L;
         }
+
+        public static readonly Random Random = new();
 
         public static string ID()
         {

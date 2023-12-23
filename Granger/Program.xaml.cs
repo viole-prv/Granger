@@ -699,32 +699,6 @@ namespace Granger
                     }
                 }
 
-                private MapPhase? _MapPhase;
-
-                public MapPhase? MapPhase
-                {
-                    get => _MapPhase;
-                    set
-                    {
-                        _MapPhase = value;
-
-                        NotifyPropertyChanged(nameof(MapPhase));
-                    }
-                }
-
-                private RoundPhase? _RoundPhase;
-
-                public RoundPhase? RoundPhase
-                {
-                    get => _RoundPhase;
-                    set
-                    {
-                        _RoundPhase = value;
-
-                        NotifyPropertyChanged(nameof(RoundPhase));
-                    }
-                }
-
                 private int _Count;
 
                 public int Count
@@ -738,8 +712,10 @@ namespace Granger
                     }
                 }
 
-                public void Update()
+                public void Update(string Map)
                 {
+                    this.Map = Map.ToUpper();
+
                     NotifyPropertyChanged(nameof(Watch));
                 }
 
@@ -1493,16 +1469,10 @@ namespace Granger
                                                     if (Render == null || Render.Description == null) continue;
 
                                                     string? Icon = Render.Description.Icon;
-                                                    string? Price = Render.Price;
 
-                                                    if (string.IsNullOrEmpty(Icon) || string.IsNullOrEmpty(Price)) continue;
+                                                    if (string.IsNullOrEmpty(Icon) || Render.Price == null) continue;
 
-                                                    var _ = Helper.ToPrice(Price);
-
-                                                    if (_.HasValue)
-                                                    {
-                                                        Auto.Inventory.Dictionary.Add(X.Key, (Icon, _.Value));
-                                                    }
+                                                    Auto.Inventory.Dictionary.Add(X.Key, (Icon, Render.Price.Value));
 
                                                     T(Icon);
                                                 }
@@ -1956,7 +1926,7 @@ namespace Granger
                         }
                     }
                 }
-
+                
                 await ASF(Account);
             }
             catch (Exception e)
@@ -3228,6 +3198,16 @@ namespace Granger
         {
             try
             {
+                Logger.LogTrace(new
+                {
+                    GameState.Map.Name,
+                    Map = GameState.Map.Phase.ToString(),
+                    Round = GameState.Round.Phase.ToString(),
+                    Auto.GameStateListener.Token,
+                    Auto.GameStateListener.Warmup,
+                    Auto.GameStateListener.GameOver
+                });
+
                 if (string.IsNullOrEmpty(GameState.Map.Name)) return;
 
                 var Account = Auto.Config!.AccountList.FirstOrDefault(x => x.Setup.SteamID.ToString() == GameState.Player.SteamID);
@@ -3259,33 +3239,19 @@ namespace Granger
 
                 if (Account.Login == Auto.GameStateListener.Token)
                 {
-                    Logger.LogTrace(new
-                    {
-                        Current = new
-                        {
-                            GameState.Round,
-                            GameState.Map
-                        },
-                        Previously = new
-                        {
-                            GameState.Previously.Round,
-                            GameState.Previously.Map
-                        }
-                    });
-
-                    Auto.GameStateListener.Update();
+                    Auto.GameStateListener.Update(GameState.Map.Name);
 
                     switch (GameState.Map.Phase)
                     {
                         case MapPhase.Live:
-                            Auto.GameStateListener.Map = GameState.Map.Name.ToUpper();
-
                             Auto.GameStateListener.Warmup = false;
                             Auto.GameStateListener.GameOver = false;
 
                             break;
 
                         case MapPhase.Warmup when !Auto.GameStateListener.Warmup:
+
+                            Logger.LogGenericDebug("WARMUP!");
 
                             Auto.GameStateListener.Warmup = true;
 
@@ -3306,6 +3272,8 @@ namespace Granger
                             break;
 
                         case MapPhase.GameOver when !Auto.GameStateListener.GameOver:
+
+                            Logger.LogGenericDebug("GAME OVER!");
 
                             Auto.GameStateListener.GameOver = true;
 
@@ -3332,9 +3300,6 @@ namespace Granger
 
                             break;
                     }
-
-                    Auto.GameStateListener.MapPhase = GameState.Map.Phase;
-                    Auto.GameStateListener.RoundPhase = GameState.Round.Phase;
 
                     Auto.Config.Update(IConfig.EUpdate.GameStateListener);
                 }
@@ -3443,7 +3408,10 @@ namespace Granger
                     {
                         if (Index == 0)
                         {
-                            Auto.GameStateListener.Token = Account.Login;
+                            if (string.IsNullOrEmpty(Auto.GameStateListener.Token))
+                            {
+                                Auto.GameStateListener.Token = Account.Login;
+                            }
 
                             await SwitchInputMethod(Account.Bin.Window.Handle);
 
@@ -3470,7 +3438,7 @@ namespace Granger
 
                                     if (Byte == null) continue;
 
-                                    Helper.PostMessage(Account.Bin.Window!.Handle, Helper.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
+                                    Native.PostMessage(Account.Bin.Window!.Handle, Native.WM_KEYUP, (IntPtr)Byte, IntPtr.Zero);
                                 }
 
                                 await SetCursorPosition(Account,
@@ -3518,7 +3486,7 @@ namespace Granger
 
         private static async Task SwitchInputMethod(IntPtr hWnd)
         {
-            await Task.Run(() => Helper.PostMessage(hWnd, 0x50, (IntPtr)1, (IntPtr)Helper.LoadKeyboardLayout("00000409", 1)));
+            await Task.Run(() => Native.PostMessage(hWnd, 0x50, (IntPtr)1, (IntPtr)Native.LoadKeyboardLayout("00000409", 1)));
         }
 
         private static async Task SetCursorPosition(IConfig.IAccount Account, int Width, int Height, bool Hover = true)
@@ -3534,12 +3502,12 @@ namespace Granger
 
                     await Task.Delay(250);
 
-                    Helper.SetCursorPosition(X, Y);
+                    Native.SetCursorPosition(X, Y);
 
                     await Task.Delay(Hover ? 1000 : 500);
 
-                    Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-                    Helper.MouseEvent(Helper.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+                    Native.MouseEvent(Native.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+                    Native.MouseEvent(Native.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
                 }
             });
         }
@@ -3548,12 +3516,12 @@ namespace Granger
         {
             await Task.Run(() =>
             {
-                uint MapVirtualKey = Helper.MapVirtualKey((uint)KeyCode, 0);
+                uint MapVirtualKey = Native.MapVirtualKey((uint)KeyCode, 0);
 
                 uint T = 1 | MapVirtualKey << 16;
 
-                Helper.PostMessage(hWnd, Helper.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
-                Helper.PostMessage(hWnd, Helper.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
+                Native.PostMessage(hWnd, Native.WM_KEYDOWN, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
+                Native.PostMessage(hWnd, Native.WM_KEYUP, (IntPtr)KeyCode, (IntPtr)(long)(ulong)T);
             });
         }
 
