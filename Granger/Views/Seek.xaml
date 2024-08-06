@@ -1,0 +1,138 @@
+﻿<c:MetroWindow
+    x:Class="Granger.Seek"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="http://metro.mahapps.com/winfx/xaml/controls"
+    MinWidth="245"
+    MinHeight="57"
+    PreviewKeyDown="MetroWindow_PreviewKeyDown"
+    ResizeMode="NoResize"
+    ShowCloseButton="False"
+    ShowIconOnTitleBar="False"
+    ShowMaxRestoreButton="False"
+    ShowMinButton="False"
+    ShowTitleBar="False"
+    SizeToContent="WidthAndHeight"
+    WindowStartupLocation="CenterOwner"
+    WindowStyle="None"
+    WindowTransitionsEnabled="False">
+    <Grid Margin="10" FocusManager.FocusedElement="{Binding ElementName=TextBox}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox
+            Name="TextBox"
+            Grid.Column="0"
+            Height="26"
+            Margin="0,0,5,0"
+            c:TextBoxHelper.Watermark="Поиск"
+            BorderThickness="0"
+            Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+            TextChanged="TextBox_TextChanged"
+            ToolTip="Введите параметры поиска." />
+        <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <Button
+                Width="26"
+                Margin="6,0,0,0"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding OnPrevious}"
+                Focusable="False"
+                ToolTip="Предыдущий аккаунт">
+                <Button.Style>
+                    <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="{x:Type Button}">
+                        <Setter Property="IsEnabled" Value="True" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AccountList}" Value="{x:Null}">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding AccountList.Count}" Value="0">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Image>
+                    <Image.Source>
+                        <DrawingImage>
+                            <DrawingImage.Drawing>
+                                <DrawingGroup>
+                                    <GeometryDrawing Brush="MediumPurple" Geometry="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
+                                </DrawingGroup>
+                            </DrawingImage.Drawing>
+                        </DrawingImage>
+                    </Image.Source>
+                </Image>
+            </Button>
+            <Button
+                Width="26"
+                Margin="6,0,0,0"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Command="{Binding OnNext}"
+                Focusable="False"
+                ToolTip="Следующий аккаунт">
+                <Button.Style>
+                    <Style BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="{x:Type Button}">
+                        <Setter Property="IsEnabled" Value="True" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding AccountList}" Value="{x:Null}">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding AccountList.Count}" Value="0">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Image>
+                    <Image.Source>
+                        <DrawingImage>
+                            <DrawingImage.Drawing>
+                                <DrawingGroup>
+                                    <GeometryDrawing Brush="MediumPurple" Geometry="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
+                                </DrawingGroup>
+                            </DrawingImage.Drawing>
+                        </DrawingImage>
+                    </Image.Source>
+                </Image>
+            </Button>
+            <Button
+                Width="24"
+                Margin="3,0,0,0"
+                c:ControlsHelper.DisabledVisualElementVisibility="Hidden"
+                c:ControlsHelper.FocusBorderBrush="Transparent"
+                c:ControlsHelper.FocusBorderThickness="0"
+                c:ControlsHelper.MouseOverBorderBrush="Transparent"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                Click="Close_Click"
+                Focusable="False"
+                ToolTip="Закрыть панель поиска">
+                <Image>
+                    <Image.Source>
+                        <DrawingImage>
+                            <DrawingImage.Drawing>
+                                <DrawingGroup>
+                                    <GeometryDrawing Brush="MediumPurple" Geometry="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
+                                </DrawingGroup>
+                            </DrawingImage.Drawing>
+                        </DrawingImage>
+                    </Image.Source>
+                </Image>
+            </Button>
+        </StackPanel>
+    </Grid>
+</c:MetroWindow>

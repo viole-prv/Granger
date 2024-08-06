@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <RootNamespace>Granger</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <COMReference Include="NetFwTypeLib">
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>1</VersionMajor>
+      <Guid>58fbcf7c-e7a9-467c-80b3-fc65e8fcca08</Guid>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MahApps.Metro" Version="2.4.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="RestSharp" Version="108.0.3" />
+    <PackageReference Include="System.Management" Version="7.0.0" />
+    <PackageReference Include="WindowsAPICodePack" Version="7.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="CSGSI">
+      <HintPath>..\..\$ VIOLE\DLL\CSGSI.dll</HintPath>
+    </Reference>
+    <Reference Include="Viole Logger Interface">
+      <HintPath>..\..\$ VIOLE\DLL\Logger\Viole Logger Interface.dll</HintPath>
+    </Reference>
+    <Reference Include="Viole Pipe">
+      <HintPath>..\..\$ VIOLE\DLL\Pipe\Viole Pipe.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
